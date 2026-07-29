@@ -30,7 +30,7 @@ export const BottomNavigation: React.FC = () => {
 
   return (
     <motion.nav
-      className="fixed bottom-0 left-0 right-0 z-50"
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
       style={{ paddingBottom: `${safeBottom}px` }}
       initial={{ y: 100 }}
       animate={{ y: 0 }}

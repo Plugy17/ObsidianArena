@@ -9,6 +9,7 @@ import { TelegramProvider } from './context/TelegramProvider';
 import { UserProvider, useUser } from './context/UserContext';
 import { Header } from './components/layout/Header';
 import { BottomNavigation } from './components/layout/BottomNavigation';
+import { Sidebar } from './components/layout/Sidebar';
 import { SplashScreen } from './components/ui/SplashScreen';
 import { Dashboard } from './pages/Dashboard';
 import { Arena } from './pages/Arena';
@@ -63,7 +64,7 @@ const PageRenderer: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.3 }}
-        className="flex-1 w-full pb-24"
+        className="flex-1 w-full pb-24 md:pb-8"
       >
         {renderPage(activeTab)}
       </motion.main>
@@ -80,7 +81,7 @@ const AppLayout: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-[#0d0d12] text-white">
       {/* Splash Screen with auto-auth */}
       <AnimatePresence mode="wait">
         {showSplash && (
@@ -109,13 +110,21 @@ const AppLayout: React.FC = () => {
               <div className="absolute bottom-1/4 left-1/3 w-56 h-56 bg-purple-neon/5 rounded-full blur-3xl animate-pulse delay-500" />
             </div>
 
-            {/* Header */}
-            <Header />
+            {/* Desktop Sidebar (hidden on mobile) */}
+            <Sidebar />
 
-            {/* Main Content */}
-            <PageRenderer />
+            {/* Main content area with left padding for sidebar on desktop */}
+            <div className="md:pl-64 w-full flex flex-col min-h-screen">
+              {/* Header */}
+              <Header />
 
-            {/* Bottom Navigation */}
+              {/* Main Content */}
+              <div className="flex-1 p-4 md:p-8">
+                <PageRenderer />
+              </div>
+            </div>
+
+            {/* Bottom Navigation (mobile only) */}
             <BottomNavigation />
           </motion.div>
         )}

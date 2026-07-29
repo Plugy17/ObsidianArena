@@ -34,8 +34,8 @@ export const CharacterCard: React.FC<CharacterCardProps> = ({
 
   const sizeConfig = {
     sm: { img: 'w-20 h-20', card: 'p-3' },
-    md: { img: 'w-24 h-24', card: 'p-4' },
-    lg: { img: 'w-32 h-32', card: 'p-6' },
+    md: { img: 'w-full h-40 md:h-48', card: 'p-4' },
+    lg: { img: 'w-full h-48 md:h-64', card: 'p-6' },
   };
 
   const expPercent = Math.min(
