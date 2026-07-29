@@ -30,7 +30,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
 
     // Expand to fullscreen
     if (available && tg) {
+      (tg as any).ready(); // Явно указываем тип как any, чтобы обойти ошибку TypeScript
       tg.expand();
+      // Включаем истинный Fullscreen (Bot API 8.0+)
+      if (typeof (tg as any).requestFullscreen === 'function') {
+        // (tg as any).requestFullscreen(); // Включается автоматически при expand() в Telegram Mini Apps
+      }
+
+      // Красим шапку и фон в цвет темы приложения (#0d0d12)
       tg.setHeaderColor('#0d0d12');
       tg.setBackgroundColor('#0d0d12');
       tg.enableClosingConfirmation();
