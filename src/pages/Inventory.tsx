@@ -3,8 +3,9 @@
 // ============================================
 
 import { motion } from 'framer-motion';
-import { Package } from 'lucide-react';
+import { Package, Gem } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import { useObsidianBalance } from '../store/gameStore';
 import { InventoryGrid } from '../components/game/InventoryGrid';
 import { Card } from '../components/ui/Card';
 
@@ -18,6 +19,17 @@ export const Inventory: React.FC = () => {
     sellItem,
     user,
   } = useUser();
+  const obsidianBalance = useObsidianBalance();
+
+  const formatBalance = (balance: number): string => {
+    if (balance >= 1000000) {
+      return `${(balance / 1000000).toFixed(1)}M`;
+    }
+    if (balance >= 1000) {
+      return `${(balance / 1000).toFixed(1)}K`;
+    }
+    return balance.toFixed(1);
+  };
 
   if (!user) {
     return (
@@ -41,6 +53,25 @@ export const Inventory: React.FC = () => {
         <p className="text-text-secondary">
           Управляйте экипировкой и расходуемыми предметами.
         </p>
+      </motion.div>
+
+      {/* Balance Display (from Zustand store) */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <Card variant="glass-purple" padding="md">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-text-secondary">Баланс Obsidian</p>
+              <p className="text-2xl font-bold text-gradient-purple">
+                {formatBalance(obsidianBalance)} OBS
+              </p>
+            </div>
+            <Gem size={24} className="text-purple-neon" />
+          </div>
+        </Card>
       </motion.div>
 
       {/* Inventory Summary */}

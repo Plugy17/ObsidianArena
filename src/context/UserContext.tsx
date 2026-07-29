@@ -20,6 +20,7 @@ import type {
 } from '../types';
 import { MOCK_CHARACTERS, MOCK_ITEMS, MOCK_GUILDS } from '../config/constants';
 import firebaseService from '../services/firebase';
+import { useGameStore } from '../store/gameStore';
 
 // --- User Context Type ---
 export interface UserContextType {
@@ -146,6 +147,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
       setIsInitialized(true);
       setIsLoading(false);
+
+      // Sync balance with Zustand game store
+      useGameStore.getState().setObsidianBalance(MOCK_USER.obsidianBalance);
+      useGameStore.getState().setGramBalance(MOCK_USER.gramBalance || 0);
     };
 
     initializeUser();
@@ -186,6 +191,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
               : prev.gramBalance,
         };
         firebaseService.updateUserBalance(prev.telegramId, amount, currency);
+
+        // Sync with Zustand game store
+        if (currency === 'obsidian') {
+          useGameStore.getState().updateObsidianBalance(amount);
+        } else {
+          useGameStore.getState().updateGramBalance(amount);
+        }
+
         return updated;
       });
     },

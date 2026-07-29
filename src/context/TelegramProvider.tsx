@@ -5,6 +5,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRawInitData } from '@telegram-apps/sdk-react';
+import { useGameStore } from '../store/gameStore';
 
 // --- Telegram Web App global type ---
 declare global {
@@ -153,6 +154,7 @@ export const TelegramProvider: React.FC<{ children: ReactNode }> = ({
     const tg = window.Telegram?.WebApp;
     const available = !!tg;
     setIsAvailable(available);
+    useGameStore.getState().setIsTelegramAvailable(available);
 
     if (available && tg) {
       // Expand to full height
@@ -168,6 +170,15 @@ export const TelegramProvider: React.FC<{ children: ReactNode }> = ({
       const tgUser = tg.initDataUnsafe?.user;
       if (tgUser) {
         setUser(tgUser);
+        // Sync Telegram user to Zustand game store
+        useGameStore.getState().setTelegramUser({
+          id: tgUser.id,
+          username: tgUser.username,
+          first_name: tgUser.first_name,
+          last_name: tgUser.last_name,
+          photo_url: tgUser.photo_url,
+          language_code: tgUser.language_code,
+        });
       }
 
       const tgChat = tg.initDataUnsafe?.chat;

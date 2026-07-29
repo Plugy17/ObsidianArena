@@ -6,11 +6,38 @@ import { motion } from 'framer-motion';
 import { Wallet, Trophy, Gem, Coins } from 'lucide-react';
 import { useTon } from '../../context/TonProvider';
 import { useUser } from '../../context/UserContext';
+import {
+  useTelegramUser,
+  useTonWallet,
+  useObsidianBalance,
+} from '../../store/gameStore';
 import { Button } from '../ui/Button';
 
 export const Header: React.FC = () => {
   const { user, isLoading } = useUser();
-  const { isConnected, address, connect, disconnect } = useTon();
+  const { isConnected, connect, disconnect } = useTon();
+
+  // --- Get data from Zustand game store ---
+  const telegramUser = useTelegramUser();
+  const tonWallet = useTonWallet();
+  const obsidianBalance = useObsidianBalance();
+
+  // Determine display name and avatar — prefer Telegram data, fallback to UserContext
+  const displayName =
+    telegramUser?.first_name || user?.firstName || 'Гость';
+  const displayAvatar =
+    telegramUser?.photo_url ||
+    user?.avatarUrl ||
+    `https://placehold.co/40x40/8a2be2/ffffff?text=${displayName[0] || 'U'}`;
+  const displayLevel = user?.level || 1;
+  const displayGramBalance = user?.gramBalance || 0;
+
+  // Use store balance if available (> 0), otherwise fall back to UserContext
+  const displayObsidianBalance =
+    obsidianBalance > 0 ? obsidianBalance : user?.obsidianBalance || 0;
+
+  // Use store wallet if available, otherwise fall back to UserContext
+  const displayWallet = tonWallet || user?.walletAddress || '';
 
   if (isLoading || !user) {
     return (
@@ -51,15 +78,15 @@ export const Header: React.FC = () => {
       {/* Left: User Info */}
       <div className="flex items-center space-x-3">
         <motion.img
-          src={user.avatarUrl || `https://placehold.co/40x40/8a2be2/ffffff?text=${user.firstName?.[0] || 'U'}`}
-          alt={user.firstName || 'User'}
+          src={displayAvatar}
+          alt={displayName}
           className="w-10 h-10 rounded-full border-2 border-purple-neon/50 object-cover"
           whileHover={{ scale: 1.1, rotate: 5 }}
         />
         <div>
           <div className="flex items-center space-x-2">
             <span className="font-bold text-text-primary">
-              {user.firstName}
+              {displayName}
             </span>
             <motion.span
               className="text-xs bg-gold/20 text-gold px-1.5 py-0.5 rounded-full flex items-center"
@@ -68,18 +95,18 @@ export const Header: React.FC = () => {
               transition={{ delay: 0.2, type: 'spring' }}
             >
               <Trophy size={12} className="mr-0.5" />
-              {user.level}
+              {displayLevel}
             </motion.span>
           </div>
           <div className="flex items-center space-x-3 text-xs text-text-secondary">
             <span className="flex items-center">
               <Gem size={12} className="mr-1 text-purple-neon" />
-              {formatBalance(user.obsidianBalance)} OBS
+              {formatBalance(displayObsidianBalance)} OBS
             </span>
-            {user.gramBalance !== undefined && (
+            {displayGramBalance !== undefined && displayGramBalance > 0 && (
               <span className="flex items-center">
                 <Coins size={12} className="mr-1 text-gold" />
-                {user.gramBalance.toFixed(3)} GRAM
+                {displayGramBalance.toFixed(3)} GRAM
               </span>
             )}
           </div>
@@ -88,13 +115,13 @@ export const Header: React.FC = () => {
 
       {/* Right: Wallet Connection */}
       <div className="flex items-center space-x-3">
-        {isConnected && address && (
+        {(isConnected || displayWallet) && (
           <motion.div
             className="text-xs text-text-secondary hidden sm:block"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            {formatAddress(address)}
+            {formatAddress(displayWallet)}
           </motion.div>
         )}
         {isConnected ? (

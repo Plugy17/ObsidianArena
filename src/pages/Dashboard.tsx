@@ -3,8 +3,9 @@
 // ============================================
 
 import { motion } from 'framer-motion';
-import { Trophy, Sword, Shield, Zap, Star, Sparkles } from 'lucide-react';
+import { Trophy, Sword, Shield, Zap, Star, Sparkles, Gem } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import { useObsidianBalance } from '../store/gameStore';
 import { CharacterCard } from '../components/game/CharacterCard';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -12,6 +13,17 @@ import { Button } from '../components/ui/Button';
 export const Dashboard: React.FC = () => {
   const { user, characters, selectedCharacter, selectCharacter, setActiveTab } =
     useUser();
+  const obsidianBalance = useObsidianBalance();
+
+  const formatBalance = (balance: number): string => {
+    if (balance >= 1000000) {
+      return `${(balance / 1000000).toFixed(1)}M`;
+    }
+    if (balance >= 1000) {
+      return `${(balance / 1000).toFixed(1)}K`;
+    }
+    return balance.toFixed(1);
+  };
 
   if (!user || !selectedCharacter) {
     return (
@@ -61,6 +73,21 @@ export const Dashboard: React.FC = () => {
           >
             Твоя авантюра в Obsidian Arena начинается здесь.
           </motion.p>
+        </Card>
+      </motion.div>
+
+      {/* Balance Display (from Zustand store) */}
+      <motion.div variants={itemVariants}>
+        <Card variant="glass-purple" padding="md">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-text-secondary">Баланс Obsidian</p>
+              <p className="text-2xl font-bold text-gradient-purple">
+                {formatBalance(obsidianBalance)} OBS
+              </p>
+            </div>
+            <Gem size={24} className="text-purple-neon" />
+          </div>
         </Card>
       </motion.div>
 

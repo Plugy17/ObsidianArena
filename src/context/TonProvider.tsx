@@ -11,6 +11,7 @@ import {
 } from '@tonconnect/ui-react';
 import type { WalletConnection } from '../types';
 import Web3Service from '../services/web3';
+import { useGameStore } from '../store/gameStore';
 
 // --- TON Context ---
 interface TonContextType {
@@ -58,6 +59,17 @@ const TonInnerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       Web3Service.disconnect();
     }
   }, [connection]);
+
+  // Sync wallet address with Zustand game store
+  useEffect(() => {
+    if (address) {
+      useGameStore.getState().setTonWallet(address);
+      useGameStore.getState().setIsWalletConnected(true);
+    } else {
+      useGameStore.getState().setTonWallet('');
+      useGameStore.getState().setIsWalletConnected(false);
+    }
+  }, [address]);
 
   const connect = async (): Promise<void> => {
     if (!isConnected) {
