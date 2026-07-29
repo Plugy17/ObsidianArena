@@ -61,7 +61,7 @@ const PageRenderer: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.3 }}
-        className="flex-1 w-full"
+        className="flex-1 w-full pb-24"
       >
         {renderPage(activeTab)}
       </motion.main>

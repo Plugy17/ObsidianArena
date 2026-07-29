@@ -156,6 +156,19 @@ export const TelegramProvider: React.FC<{ children: ReactNode }> = ({
     setIsAvailable(available);
     useGameStore.getState().setIsTelegramAvailable(available);
 
+    // Read safe area insets from Telegram WebApp
+    const safeAreaInsets = tg?.safeAreaInsets as
+      | { top: number; bottom: number; left: number; right: number }
+      | undefined;
+    if (safeAreaInsets) {
+      useGameStore.getState().setSafeAreaInsets({
+        top: safeAreaInsets.top,
+        bottom: safeAreaInsets.bottom,
+        left: safeAreaInsets.left,
+        right: safeAreaInsets.right,
+      });
+    }
+
     if (available && tg) {
       // Expand to full height
       tg.expand();

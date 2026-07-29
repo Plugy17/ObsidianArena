@@ -15,6 +15,14 @@ export interface TelegramUser {
   language_code?: string;
 }
 
+// --- Safe Area Insets (Telegram Mini App) ---
+export interface SafeAreaInsets {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
 // --- Game Store State ---
 export interface GameState {
   // Telegram data
@@ -29,6 +37,9 @@ export interface GameState {
   obsidianBalance: number;
   gramBalance: number;
 
+  // Safe area insets (Telegram Mini App)
+  safeAreaInsets: SafeAreaInsets | null;
+
   // Actions
   setTelegramUser: (user: TelegramUser | null) => void;
   setIsTelegramAvailable: (available: boolean) => void;
@@ -38,6 +49,7 @@ export interface GameState {
   updateObsidianBalance: (amount: number) => void;
   setGramBalance: (balance: number) => void;
   updateGramBalance: (amount: number) => void;
+  setSafeAreaInsets: (insets: SafeAreaInsets | null) => void;
 }
 
 // --- Create Store ---
@@ -50,6 +62,7 @@ export const useGameStore = create<GameState>()(
     isWalletConnected: false,
     obsidianBalance: 0,
     gramBalance: 0,
+    safeAreaInsets: null,
 
     // Telegram actions
     setTelegramUser: (user) => set({ telegramUser: user }),
@@ -72,6 +85,7 @@ export const useGameStore = create<GameState>()(
       set((state) => ({
         gramBalance: Math.max(0, state.gramBalance + amount),
       })),
+    setSafeAreaInsets: (insets) => set({ safeAreaInsets: insets }),
   }))
 );
 

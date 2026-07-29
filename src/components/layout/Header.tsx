@@ -11,6 +11,7 @@ import {
   useTonWallet,
   useObsidianBalance,
 } from '../../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 import { Button } from '../ui/Button';
 
 export const Header: React.FC = () => {
@@ -21,6 +22,10 @@ export const Header: React.FC = () => {
   const telegramUser = useTelegramUser();
   const tonWallet = useTonWallet();
   const obsidianBalance = useObsidianBalance();
+  const safeAreaInsets = useGameStore((state) => state.safeAreaInsets);
+
+  // Calculate top padding from safe area insets (notch, status bar)
+  const safeTop = safeAreaInsets?.top ?? 0;
 
   // Determine display name and avatar — prefer Telegram data, fallback to UserContext
   const displayName =
@@ -71,6 +76,7 @@ export const Header: React.FC = () => {
   return (
     <motion.header
       className="flex items-center justify-between p-4 glass-purple rounded-b-2xl"
+      style={{ paddingTop: `${safeTop + 16}px` }}
       initial={{ y: -50, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}

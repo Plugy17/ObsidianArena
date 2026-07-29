@@ -10,6 +10,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
+import { useGameStore } from '../../store/gameStore';
 import { NAVIGATION_TABS } from '../../config/constants';
 import type { TabType } from '../../types';
 
@@ -22,15 +23,20 @@ const tabIcons: Record<TabType, React.FC<{ size: number }>> = {
 
 export const BottomNavigation: React.FC = () => {
   const { activeTab, setActiveTab } = useUser();
+  const safeAreaInsets = useGameStore((state) => state.safeAreaInsets);
+
+  // Calculate bottom padding from safe area insets (iOS home indicator, etc.)
+  const safeBottom = safeAreaInsets?.bottom ?? 0;
 
   return (
     <motion.nav
-      className="fixed bottom-0 left-0 right-0 z-40 mb-safe"
+      className="fixed bottom-0 left-0 right-0 z-50"
+      style={{ paddingBottom: `${safeBottom}px` }}
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
-      <div className="flex items-center justify-around p-2 glass-purple rounded-t-2xl mx-2 mb-2">
+      <div className="flex items-center justify-around p-2 backdrop-blur-md bg-black/60 border-t border-purple-neon/20">
         {NAVIGATION_TABS.map((tab) => {
           const Icon = tabIcons[tab.id as TabType];
           const isActive = activeTab === tab.id;
@@ -62,11 +68,6 @@ export const BottomNavigation: React.FC = () => {
 
               <Icon size={22} />
               <span className="text-xs mt-1 font-medium">{tab.label}</span>
-
-              {/* Emoji for extra flair */}
-              <span className="absolute -bottom-1 text-xs opacity-60">
-                {tab.emoji}
-              </span>
             </motion.button>
           );
         })}
