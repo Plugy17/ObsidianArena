@@ -1,0 +1,42 @@
+{
+  "url": "https://obsidianarena.com/",
+  "name": "Obsidian Arena",
+  "description": "Фэнтезийная MOBA-арена с блокчейн-экономикой на базе TON",
+  "logo": "https://obsidianarena.com/logo.png",
+  "bridge": "https://tonapi.io/bridge",
+  "about": {
+    "name": "Obsidian Arena",
+    "description": "Играй в фэнтезийную арену, развивай персонажей, торгуй Obsidian и сражайся в гильдейских битвах.",
+    "picture": "https://obsidianarena.com/logo.png"
+  },
+  "terms": {
+    "use": "https://obsidianarena.com/terms",
+    "privacy": "https://obsidianarena.com/privacy"
+  },
+  "devices": {
+    "desktop": {
+      "bridge": "https://tonapi.io/bridge",
+      "about": {
+        "name": "Obsidian Arena",
+        "description": "Играй в фэнтезийную арену, развивай персонажей, торгуй Obsidian и сражайся в гильдейских битвах.",
+        "picture": "https://obsidianarena.com/logo.png"
+      },
+      "terms": {
+        "use": "https://obsidianarena.com/terms",
+        "privacy": "https://obsidianarena.com/privacy"
+      }
+    },
+    "mobile": {
+      "bridge": "https://tonapi.io/bridge",
+      "about": {
+        "name": "Obsidian Arena",
+        "description": "Играй в фэнтезийную арену, развивай персонажей, торгуй Obsidian и сражайся в гильдейских битвах.",
+        "picture": "https://obsidianarena.com/logo.png"
+      },
+      "terms": {
+        "use": "https://obsidianarena.com/terms",
+        "privacy": "https://obsidianarena.com/privacy"
+      }
+    }
+  }
+}
