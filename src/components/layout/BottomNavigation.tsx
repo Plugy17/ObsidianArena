@@ -36,7 +36,7 @@ export const BottomNavigation: React.FC = () => {
       animate={{ y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
-      <div className="flex items-center justify-around p-2 backdrop-blur-md bg-black/60 border-t border-purple-neon/20">
+      <div className="flex items-center justify-around p-2 backdrop-blur-md bg-black/80 border-t border-purple-neon/20">
         {NAVIGATION_TABS.map((tab) => {
           const Icon = tabIcons[tab.id as TabType];
           const isActive = activeTab === tab.id;

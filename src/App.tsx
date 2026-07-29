@@ -2,12 +2,14 @@
 // Obsidian Arena — Main App Component
 // ============================================
 
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TonProvider } from './context/TonProvider';
 import { TelegramProvider } from './context/TelegramProvider';
 import { UserProvider, useUser } from './context/UserContext';
 import { Header } from './components/layout/Header';
 import { BottomNavigation } from './components/layout/BottomNavigation';
+import { SplashScreen } from './components/ui/SplashScreen';
 import { Dashboard } from './pages/Dashboard';
 import { Arena } from './pages/Arena';
 import { Inventory } from './pages/Inventory';
@@ -71,23 +73,53 @@ const PageRenderer: React.FC = () => {
 
 // --- App Layout ---
 const AppLayout: React.FC = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  const handleSplashComplete = useCallback(() => {
+    setShowSplash(false);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Animated background particles */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-neon/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-3/4 right-1/4 w-48 h-48 bg-gold/5 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute bottom-1/4 left-1/3 w-56 h-56 bg-purple-neon/5 rounded-full blur-3xl animate-pulse delay-500" />
-      </div>
+      {/* Splash Screen with auto-auth */}
+      <AnimatePresence mode="wait">
+        {showSplash && (
+          <SplashScreen
+            key="splash"
+            onComplete={handleSplashComplete}
+            duration={2000}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Header */}
-      <Header />
+      {/* Main App (shown after splash) */}
+      <AnimatePresence>
+        {!showSplash && (
+          <motion.div
+            key="main-app"
+            className="min-h-screen flex flex-col relative overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          >
+            {/* Animated background particles */}
+            <div className="fixed inset-0 pointer-events-none">
+              <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-neon/5 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute top-3/4 right-1/4 w-48 h-48 bg-gold/5 rounded-full blur-3xl animate-pulse delay-1000" />
+              <div className="absolute bottom-1/4 left-1/3 w-56 h-56 bg-purple-neon/5 rounded-full blur-3xl animate-pulse delay-500" />
+            </div>
 
-      {/* Main Content */}
-      <PageRenderer />
+            {/* Header */}
+            <Header />
 
-      {/* Bottom Navigation */}
-      <BottomNavigation />
+            {/* Main Content */}
+            <PageRenderer />
+
+            {/* Bottom Navigation */}
+            <BottomNavigation />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
