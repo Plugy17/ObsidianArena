@@ -907,41 +907,51 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ onMatchEnd }) => {
 
   useEffect(() => {
     if (!containerRef.current || gameRef.current) return;
-    const scene = new GameScene();
-    sceneRef.current = scene;
+    
+    // Delay to ensure container is sized
+    const timer = setTimeout(() => {
+      const scene = new GameScene();
+      sceneRef.current = scene;
 
-    const container = containerRef.current;
-    const w = container.clientWidth || window.innerWidth;
-    const h = container.clientHeight || window.innerHeight;
+      const container = containerRef.current!;
+      const w = container.clientWidth || window.innerWidth;
+      const h = container.clientHeight || window.innerHeight;
 
-    const game = new Phaser.Game({
-      type: Phaser.AUTO,
-      parent: container,
-      width: w,
-      height: h,
-      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-      physics: { default: 'arcade', arcade: { debug: false } },
-      scene: [scene],
-      render: { antialias: true, pixelArt: false },
-      backgroundColor: '#0a0f0a',
-    });
-    gameRef.current = game;
+      const game = new Phaser.Game({
+        type: Phaser.AUTO,
+        parent: container,
+        width: w,
+        height: h,
+        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+        physics: { default: "arcade", arcade: { debug: false } },
+        scene: [scene],
+        render: { antialias: true, pixelArt: false },
+        backgroundColor: "#0a0f0a",
+      });
+      gameRef.current = game;
 
-    scene.events.on('match_end', (result: { won: boolean; kills: number; deaths: number; duration: number }) => {
-      onMatchEnd?.(result);
-    });
+      scene.events.on("match_end", (result: { won: boolean; kills: number; deaths: number; duration: number }) => {
+        onMatchEnd?.(result);
+      });
 
-    const tick = setInterval(() => forceUpdate((n) => n + 1), 100);
-    const handleResize = () => game.scale.resize(window.innerWidth, window.innerHeight);
-    window.addEventListener('resize', handleResize);
+      const tick = setInterval(() => forceUpdate((n) => n + 1), 100);
+      const handleResize = () => {
+        const cw = containerRef.current?.clientWidth || window.innerWidth;
+        const ch = containerRef.current?.clientHeight || window.innerHeight;
+        game.scale.resize(cw, ch);
+      };
+      window.addEventListener("resize", handleResize);
 
-    return () => {
-      clearInterval(tick);
-      window.removeEventListener('resize', handleResize);
-      scene.events.off('match_end');
-      game.destroy(true);
-      gameRef.current = null;
-    };
+      return () => {
+        clearInterval(tick);
+        window.removeEventListener("resize", handleResize);
+        scene.events.off("match_end");
+        game.destroy(true);
+        gameRef.current = null;
+      };
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [onMatchEnd]);
 
   const handleMove = useCallback((x: number, y: number) => sceneRef.current?.setMoveDirection(x, y), []);
