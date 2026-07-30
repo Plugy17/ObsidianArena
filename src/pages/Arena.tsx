@@ -1,10 +1,10 @@
 // ============================================
-// Obsidian Arena — Arena Page (Lobby → Game)
+// Obsidian Arena — Arena Page (3D Game Engine)
 // ============================================
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArenaCanvas } from '../components/game/ArenaCanvas';
+import { Arena3D } from '../components/game/Arena3D';
 import { ArenaLobby } from './ArenaLobby';
 import type { Character } from '../config/characters';
 
@@ -38,42 +38,21 @@ export const Arena: React.FC = () => {
   return (
     <AnimatePresence mode="wait">
       {phase === 'lobby' && (
-        <motion.div
-          key="lobby"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+        <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <ArenaLobby onStartGame={handleStartGame} />
         </motion.div>
       )}
 
       {phase === 'game' && (
-        <motion.div
-          key="game"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="w-full h-full relative"
-          style={{ minHeight: 'calc(100vh - 140px)' }}
-        >
-          <ArenaCanvas
-            character={selectedChar!}
-            gameMode={gameMode!}
-            onMatchEnd={handleMatchEnd}
-            onBackToLobby={handleBackToLobby}
-          />
+        <motion.div key="game" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="w-full h-full relative" style={{ minHeight: 'calc(100vh - 140px)' }}>
+          <Arena3D character={selectedChar!} gameMode={gameMode!} onMatchEnd={handleMatchEnd} onBackToLobby={handleBackToLobby} />
         </motion.div>
       )}
 
       {phase === 'result' && matchResult && (
-        <motion.div
-          key="result"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          className="flex items-center justify-center min-h-[calc(100vh-140px)] bg-gradient-to-b from-obsidian-900 via-obsidian-800 to-obsidian-900"
-        >
+        <motion.div key="result" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+          className="flex items-center justify-center min-h-[calc(100vh-140px)] bg-gradient-to-b from-obsidian-900 via-obsidian-800 to-obsidian-900">
           <div className="text-center bg-obsidian-800/80 rounded-2xl border border-white/10 p-8 max-w-md">
             <div className="text-6xl mb-4">{matchResult.won ? '🏆' : '💀'}</div>
             <h2 className={`text-3xl font-bold mb-2 ${matchResult.won ? 'text-gold' : 'text-red-500'}`}>
@@ -84,10 +63,8 @@ export const Arena: React.FC = () => {
               <span className="text-red-400">💀 Deaths: {matchResult.deaths}</span>
               <span className="text-text-secondary">⏱ {Math.round(matchResult.duration)}s</span>
             </div>
-            <button
-              onClick={handleBackToLobby}
-              className="px-8 py-3 bg-gradient-to-r from-purple-neon to-purple-700 rounded-xl font-bold text-white shadow-lg hover:shadow-purple-neon/30 transition-all"
-            >
+            <button onClick={handleBackToLobby}
+              className="px-8 py-3 bg-gradient-to-r from-purple-neon to-purple-700 rounded-xl font-bold text-white shadow-lg hover:shadow-purple-neon/30 transition-all">
               BACK TO LOBBY
             </button>
           </div>
