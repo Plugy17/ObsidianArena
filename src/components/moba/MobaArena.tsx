@@ -20,7 +20,6 @@ import { HUD } from './HUD';
 import { MobileControls } from './MobileControls';
 import { useKeyboardControls } from '../../hooks/useKeyboardControls';
 import { useUser } from '../../context/UserContext';
-import { useGameStore } from '../../store/gameStore';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import type { InputCommand, MatchMode, AbilityDefinition } from '../../logic/moba/types';

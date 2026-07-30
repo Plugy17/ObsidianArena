@@ -60,8 +60,6 @@ export class MatchEngine {
     abilityDefs?: AbilityDefinition[],
     customConfig?: Partial<MatchConfig>
   ) {
-    this.characterData = playerCharacter;
-    this.enemyCharacterData = enemyCharacter;
     this.abilityDefs = abilityDefs || [];
 
     this.config = {
@@ -134,7 +132,6 @@ export class MatchEngine {
   // --- Start the match ---
   start(): void {
     this.state.state = 'playing';
-    this.lastUpdateTime = Date.now();
   }
 
   // --- Submit input command ---
