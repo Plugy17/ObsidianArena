@@ -95,6 +95,19 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
   const charName = character?.name || 'Champion';
   const modeLabel = gameMode === 'pve' ? 'vs AI' : 'vs Player';
 
+  // Fullscreen on mount
+  useEffect(() => {
+    const el = mountRef.current;
+    if (el && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    }
+    return () => {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }, []);
+
   // Create a text sprite for HP bars
   const makeLabel = (text: string, color: string, size: number): THREE.Sprite => {
     const canvas = document.createElement('canvas');
@@ -115,96 +128,184 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     return sprite;
   };
 
-  // Build a hero mesh
+  // Build a hero mesh with better details
   const buildHero = (color: number): THREE.Group => {
     const g = new THREE.Group();
+    
+    // Body armor
     const body = new THREE.Mesh(
-      new THREE.BoxGeometry(12, 20, 8),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.8 })
+      new THREE.BoxGeometry(14, 22, 10),
+      new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6, metalness: 0.3 })
     );
-    body.position.y = 10;
+    body.position.y = 12;
     g.add(body);
+    
+    // Armor plates
+    const armor = new THREE.Mesh(
+      new THREE.BoxGeometry(16, 18, 2),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.4 })
+    );
+    armor.position.set(0, 12, 5);
+    g.add(armor);
+    
+    // Head
     const head = new THREE.Mesh(
-      new THREE.SphereGeometry(6, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5 })
+      new THREE.SphereGeometry(7, 12, 12),
+      new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.2 })
     );
-    head.position.y = 22;
+    head.position.y = 24;
     g.add(head);
+    
+    // Helmet
+    const helmet = new THREE.Mesh(
+      new THREE.SphereGeometry(7.5, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.5 })
+    );
+    helmet.position.y = 24;
+    g.add(helmet);
+    
+    // Shield
     const shield = new THREE.Mesh(
-      new THREE.BoxGeometry(8, 14, 2),
-      new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.6 })
+      new THREE.CylinderGeometry(6, 6, 2, 8),
+      new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.3, metalness: 0.7 })
     );
-    shield.position.set(-10, 10, 0);
+    shield.rotation.z = Math.PI / 2;
+    shield.position.set(-12, 10, 0);
     g.add(shield);
+    
+    // Sword
     const sword = new THREE.Mesh(
-      new THREE.BoxGeometry(2, 16, 2),
-      new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3 })
+      new THREE.BoxGeometry(2, 20, 2),
+      new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.2, metalness: 0.9 })
     );
-    sword.position.set(10, 8, 0);
+    sword.position.set(12, 10, 0);
     g.add(sword);
+    
+    // Sword handle
+    const handle = new THREE.Mesh(
+      new THREE.CylinderGeometry(1, 1, 4, 6),
+      new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.8 })
+    );
+    handle.position.set(12, 2, 0);
+    g.add(handle);
+    
+    // Legs
+    const leg1 = new THREE.Mesh(
+      new THREE.BoxGeometry(5, 10, 6),
+      new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 })
+    );
+    leg1.position.set(-4, 4, 0);
+    g.add(leg1);
+    const leg2 = new THREE.Mesh(
+      new THREE.BoxGeometry(5, 10, 6),
+      new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 })
+    );
+    leg2.position.set(4, 4, 0);
+    g.add(leg2);
+    
     // Shadow
     const shadow = new THREE.Mesh(
-      new THREE.CircleGeometry(12, 16),
+      new THREE.CircleGeometry(14, 16),
       new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 })
     );
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = -0.5;
     g.add(shadow);
+    
     return g;
   };
 
-  // Build a tower mesh
+  // Build a tower mesh with better details
   const buildTower = (color: number): THREE.Group => {
     const g = new THREE.Group();
+    
+    // Base platform
     const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(16, 20, 8, 8),
+      new THREE.CylinderGeometry(20, 24, 8, 12),
       new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9 })
     );
     base.position.y = 4;
     g.add(base);
+    
+    // Main tower body
     const body = new THREE.Mesh(
-      new THREE.CylinderGeometry(12, 14, 30, 8),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
+      new THREE.CylinderGeometry(14, 18, 35, 12),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.3 })
     );
-    body.position.y = 22;
+    body.position.y = 24;
     g.add(body);
+    
+    // Battlements
+    for (let i = 0; i < 8; i++) {
+      const battlement = new THREE.Mesh(
+        new THREE.BoxGeometry(4, 6, 4),
+        new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.8 })
+      );
+      const angle = (i / 8) * Math.PI * 2;
+      battlement.position.set(Math.cos(angle) * 16, 42, Math.sin(angle) * 16);
+      g.add(battlement);
+    }
+    
+    // Crystal top
     const top = new THREE.Mesh(
-      new THREE.CylinderGeometry(4, 6, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.4, emissive: color, emissiveIntensity: 0.3 })
+      new THREE.OctahedronGeometry(6, 0),
+      new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.2, metalness: 0.8, emissive: color, emissiveIntensity: 0.5 })
     );
-    top.position.y = 36;
+    top.position.y = 50;
     g.add(top);
+    
     return g;
   };
 
-  // Build a nexus mesh
+  // Build a nexus mesh with better details
   const buildNexus = (color: number): THREE.Group => {
     const g = new THREE.Group();
+    
+    // Base platform
     const base = new THREE.Mesh(
-      new THREE.CylinderGeometry(30, 35, 10, 8),
+      new THREE.CylinderGeometry(35, 40, 12, 12),
       new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.9 })
     );
-    base.position.y = 5;
+    base.position.y = 6;
     g.add(base);
+    
+    // Main building
     const body = new THREE.Mesh(
-      new THREE.BoxGeometry(40, 30, 40),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
+      new THREE.BoxGeometry(50, 35, 50),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.3 })
     );
-    body.position.y = 20;
+    body.position.y = 24;
     g.add(body);
+    
+    // Windows
+    for (let i = 0; i < 4; i++) {
+      const window = new THREE.Mesh(
+        new THREE.BoxGeometry(8, 10, 2),
+        new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.2, emissive: 0x4488ff, emissiveIntensity: 0.5 })
+      );
+      const angle = (i / 4) * Math.PI * 2;
+      window.position.set(Math.cos(angle) * 26, 24, Math.sin(angle) * 26);
+      window.rotation.y = angle;
+      g.add(window);
+    }
+    
+    // Roof
     const roof = new THREE.Mesh(
-      new THREE.ConeGeometry(25, 20, 4),
+      new THREE.ConeGeometry(30, 25, 4),
       new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 })
     );
-    roof.position.y = 40;
+    roof.position.y = 48;
     roof.rotation.y = Math.PI / 4;
     g.add(roof);
+    
+    // Crystal
     const crystal = new THREE.Mesh(
-      new THREE.OctahedronGeometry(8),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: color, emissiveIntensity: 0.8 })
+      new THREE.OctahedronGeometry(10, 0),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, metalness: 0.9, emissive: color, emissiveIntensity: 0.8 })
     );
-    crystal.position.y = 50;
+    crystal.position.y = 62;
     g.add(crystal);
+    
     return g;
   };
 
@@ -212,13 +313,13 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
   const buildMinion = (color: number): THREE.Group => {
     const g = new THREE.Group();
     const body = new THREE.Mesh(
-      new THREE.SphereGeometry(5, 6, 6),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.8 })
+      new THREE.SphereGeometry(6, 8, 8),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
     );
-    body.position.y = 5;
+    body.position.y = 6;
     g.add(body);
     const shadow = new THREE.Mesh(
-      new THREE.CircleGeometry(5, 8),
+      new THREE.CircleGeometry(6, 8),
       new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 })
     );
     shadow.rotation.x = -Math.PI / 2;
@@ -234,6 +335,7 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a3a1a);
+    scene.fog = new THREE.Fog(0x1a3a1a, 500, 1200);
 
     // Camera
     const camera = new THREE.PerspectiveCamera(45, mount.clientWidth / mount.clientHeight, 1, 2000);
@@ -249,15 +351,21 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     mount.appendChild(renderer.domElement);
 
     // Lighting
-    const ambient = new THREE.AmbientLight(0x404060, 0.5);
+    const ambient = new THREE.AmbientLight(0x404060, 0.6);
     scene.add(ambient);
-    const dirLight = new THREE.DirectionalLight(0xffeedd, 1);
+    const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2);
     dirLight.position.set(100, 200, 100);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.camera.near = 0.5;
+    dirLight.shadow.camera.far = 1000;
+    dirLight.shadow.camera.left = -500;
+    dirLight.shadow.camera.right = 500;
+    dirLight.shadow.camera.top = 500;
+    dirLight.shadow.camera.bottom = -500;
     scene.add(dirLight);
-    const fillLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+    const fillLight = new THREE.DirectionalLight(0x4488ff, 0.4);
     fillLight.position.set(-100, 100, -100);
     scene.add(fillLight);
 
@@ -275,6 +383,7 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     const lane = new THREE.Mesh(new THREE.PlaneGeometry(ARENA_W, 120), laneMat);
     lane.rotation.x = -Math.PI / 2;
     lane.position.set(ARENA_W / 2, 0.5, LANE_Y + ARENA_H / 2 - 100);
+    lane.receiveShadow = true;
     scene.add(lane);
 
     // Create units
@@ -301,6 +410,8 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
       const color = tp.team === 'player' ? 0x4a90d9 : 0xd94a4a;
       const mesh = buildTower(color);
       mesh.position.set(tp.x, 0, tp.z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
       scene.add(mesh);
       towers.push({ mesh, hp: TOWER_HP, maxHp: TOWER_HP, ...tp, team: tp.team, type: 'tower' });
     }
@@ -308,9 +419,11 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     // Nexuses
     const nexusLMesh = buildNexus(0x4a90d9);
     nexusLMesh.position.set(60, 0, LANE_Y);
+    nexusLMesh.castShadow = true;
     scene.add(nexusLMesh);
     const nexusRMesh = buildNexus(0xd94a4a);
     nexusRMesh.position.set(ARENA_W - 60, 0, LANE_Y);
+    nexusRMesh.castShadow = true;
     scene.add(nexusRMesh);
     const nexusL: Unit = { mesh: nexusLMesh, hp: NEXUS_HP, maxHp: NEXUS_HP, x: 60, z: LANE_Y, team: 'player', type: 'nexus' };
     const nexusR: Unit = { mesh: nexusRMesh, hp: NEXUS_HP, maxHp: NEXUS_HP, x: ARENA_W - 60, z: LANE_Y, team: 'enemy', type: 'nexus' };
@@ -598,7 +711,9 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
       clearInterval(tick);
       window.removeEventListener('resize', resize);
       renderer.dispose();
-      mount.removeChild(renderer.domElement);
+      if (mount.contains(renderer.domElement)) {
+        mount.removeChild(renderer.domElement);
+      }
     };
   }, [character, gameMode, onMatchEnd]);
 
@@ -706,40 +821,38 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
   }, []);
 
   return (
-    <div className="relative w-full h-full bg-obsidian-900 select-none" style={{ zIndex: 0 }}>
-      <div ref={mountRef} className="relative w-full h-full" style={{ minHeight: '600px' }} />
-
+    <div ref={mountRef} className="fixed inset-0 w-screen h-screen bg-obsidian-900 select-none" style={{ zIndex: 9999 }}>
       {/* Nexus HP */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-3 z-30 pointer-events-none">
-        <div className="flex items-center gap-1 bg-black/50 rounded-lg px-2 py-1 border border-blue-500/30">
-          <span className="text-blue-400 text-[10px] font-bold">NEXUS</span>
-          <div className="w-16 h-2 bg-black/60 rounded-full overflow-hidden border border-white/20">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-3 z-30 pointer-events-none">
+        <div className="flex items-center gap-1 bg-black/60 rounded-lg px-3 py-1.5 border border-blue-500/40">
+          <span className="text-blue-400 text-xs font-bold">NEXUS</span>
+          <div className="w-20 h-2.5 bg-black/60 rounded-full overflow-hidden border border-white/20">
             <div className="h-full bg-blue-500 transition-all" style={{ width: `${nlp}%` }} />
           </div>
         </div>
-        <span className="text-gold text-xs font-bold">VS</span>
-        <div className="flex items-center gap-1 bg-black/50 rounded-lg px-2 py-1 border border-red-500/30">
-          <div className="w-16 h-2 bg-black/60 rounded-full overflow-hidden border border-white/20">
+        <span className="text-gold text-sm font-bold">VS</span>
+        <div className="flex items-center gap-1 bg-black/60 rounded-lg px-3 py-1.5 border border-red-500/40">
+          <div className="w-20 h-2.5 bg-black/60 rounded-full overflow-hidden border border-white/20">
             <div className="h-full bg-red-500 transition-all" style={{ width: `${nrp}%` }} />
           </div>
-          <span className="text-red-400 text-[10px] font-bold">NEXUS</span>
+          <span className="text-red-400 text-xs font-bold">NEXUS</span>
         </div>
       </div>
 
       {/* Player info */}
-      <div className="absolute top-10 left-2 z-30 pointer-events-none">
-        <div className="flex items-center gap-2 bg-black/50 rounded-lg px-2 py-1.5 border border-purple-neon/30">
-          <div className="w-8 h-8 rounded-full bg-purple-neon/60 border-2 border-white/40 flex items-center justify-center text-sm">🛡️</div>
+      <div className="absolute top-12 left-3 z-30 pointer-events-none">
+        <div className="flex items-center gap-2 bg-black/60 rounded-lg px-3 py-2 border border-purple-neon/40">
+          <div className="w-10 h-10 rounded-full bg-purple-neon/60 border-2 border-white/40 flex items-center justify-center text-lg">🛡️</div>
           <div className="flex flex-col gap-0.5">
-            <div className="text-[10px] text-purple-neon font-bold">{charName} ({modeLabel})</div>
+            <div className="text-xs text-purple-neon font-bold">{charName} ({modeLabel})</div>
             <div className="flex items-center gap-1">
-              <span className="text-red-400 text-xs">❤️</span>
-              <div className="w-20 h-2 bg-black/60 rounded-full overflow-hidden border border-white/20">
+              <span className="text-red-400 text-sm">❤️</span>
+              <div className="w-24 h-2.5 bg-black/60 rounded-full overflow-hidden border border-white/20">
                 <div className="h-full bg-green-500 transition-all" style={{ width: `${hpPct}%` }} />
               </div>
-              <span className="text-white text-[10px] font-bold">{Math.round(hpPct)}%</span>
+              <span className="text-white text-xs font-bold">{Math.round(hpPct)}%</span>
             </div>
-            <div className="flex items-center gap-2 text-[10px]">
+            <div className="flex items-center gap-2 text-xs">
               <span className="text-gold">💰 {gold}</span>
               <span className="text-green-400">⚔️ {kills}</span>
               <span className="text-red-400">💀 {deaths}</span>
@@ -749,37 +862,37 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
       </div>
 
       {/* Enemy info */}
-      <div className="absolute top-10 right-2 z-30 pointer-events-none">
-        <div className="flex items-center gap-2 bg-black/50 rounded-lg px-2 py-1.5 border border-red-500/30">
+      <div className="absolute top-12 right-3 z-30 pointer-events-none">
+        <div className="flex items-center gap-2 bg-black/60 rounded-lg px-3 py-2 border border-red-500/40">
           <div className="flex flex-col gap-0.5 items-end">
             <div className="flex items-center gap-1">
-              <span className="text-white text-[10px] font-bold">{Math.round(ehpPct)}%</span>
-              <div className="w-20 h-2 bg-black/60 rounded-full overflow-hidden border border-white/20">
+              <span className="text-white text-xs font-bold">{Math.round(ehpPct)}%</span>
+              <div className="w-24 h-2.5 bg-black/60 rounded-full overflow-hidden border border-white/20">
                 <div className="h-full bg-red-500 transition-all" style={{ width: `${ehpPct}%` }} />
               </div>
-              <span className="text-red-400 text-xs">❤️</span>
+              <span className="text-red-400 text-sm">❤️</span>
             </div>
-            <span className="text-red-400 text-[10px]">Enemy</span>
+            <span className="text-red-400 text-xs">Enemy</span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-red-500/60 border-2 border-white/40 flex items-center justify-center text-sm">⚔️</div>
+          <div className="w-10 h-10 rounded-full bg-red-500/60 border-2 border-white/40 flex items-center justify-center text-lg">⚔️</div>
         </div>
       </div>
 
       {/* Death overlay */}
       {dead && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 pointer-events-none">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 pointer-events-none">
           <div className="text-center">
-            <div className="text-red-500 text-4xl font-bold mb-1">YOU DIED</div>
-            <div className="text-white text-lg">Respawn in {rt}s</div>
+            <div className="text-red-500 text-5xl font-bold mb-2">YOU DIED</div>
+            <div className="text-white text-xl">Respawn in {rt}s</div>
           </div>
         </div>
       )}
 
       {/* Joystick */}
-      <div className="absolute bottom-6 left-6 z-30">
-        <div className="relative w-32 h-32 rounded-full bg-obsidian-700/40 border-2 border-purple-neon/30 touch-none">
+      <div className="absolute bottom-8 left-6 z-30">
+        <div className="relative w-36 h-36 rounded-full bg-obsidian-700/50 border-2 border-purple-neon/40 touch-none">
           <div
-            className="absolute w-14 h-14 rounded-full bg-purple-neon/60 border-2 border-white/50 pointer-events-none"
+            className="absolute w-16 h-16 rounded-full bg-purple-neon/70 border-2 border-white/60 pointer-events-none"
             onPointerDown={(e) => {
               const r = e.currentTarget.parentElement!.getBoundingClientRect();
               const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
@@ -799,11 +912,11 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="absolute bottom-6 right-6 z-30 flex items-end gap-3">
-        <button onClick={handleSkill2} className="w-16 h-16 rounded-full border-2 border-[#00e5ff] bg-[#00e5ff]22 flex items-center justify-center text-2xl touch-none">💨</button>
-        <button onClick={handleSkill1} className="w-16 h-16 rounded-full border-2 border-[#ff6b35] bg-[#ff6b35]22 flex items-center justify-center text-2xl touch-none">🔥</button>
-        <button onClick={handleAttack} className="w-20 h-20 rounded-full border-2 border-[#daa520] bg-[#daa520]22 flex items-center justify-center text-2xl touch-none">⚔️</button>
+      {/* Action buttons - Q W E R layout */}
+      <div className="absolute bottom-8 right-6 z-30 flex items-end gap-3">
+        <button onClick={handleSkill2} className="w-16 h-16 rounded-full border-2 border-[#00e5ff] bg-[#00e5ff]22 flex items-center justify-center text-2xl font-bold text-white touch-none shadow-lg">R</button>
+        <button onClick={handleSkill1} className="w-16 h-16 rounded-full border-2 border-[#ff6b35] bg-[#ff6b35]22 flex items-center justify-center text-2xl font-bold text-white touch-none shadow-lg">E</button>
+        <button onClick={handleAttack} className="w-20 h-20 rounded-full border-2 border-[#daa520] bg-[#daa520]22 flex items-center justify-center text-2xl font-bold text-white touch-none shadow-lg">Q</button>
       </div>
     </div>
   );
