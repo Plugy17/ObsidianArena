@@ -8,7 +8,6 @@ import type {
   CreepEntity,
   Tower,
   Nexus,
-  CombatEntity,
   Skillshot,
 } from '../../logic/moba/types';
 

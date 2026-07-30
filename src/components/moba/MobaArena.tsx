@@ -105,7 +105,7 @@ const MatchSetup: React.FC<{
       exit={{ opacity: 0, y: -20 }}
     >
       <motion.img
-        src="/logo.svg"
+        src="/logo.png"
         alt="Obsidian Arena"
         className="w-20 h-20 mb-6 drop-shadow-[0_0_20px_rgba(138,43,226,0.5)]"
         initial={{ scale: 0, rotate: -180 }}

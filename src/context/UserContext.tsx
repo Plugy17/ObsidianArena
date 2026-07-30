@@ -152,7 +152,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
           level: 1,
           experience: 0,
           selectedCharacterId: 'char-1',
-          guildId: null,
+          guildId: undefined,
           createdAt: new Date().toISOString(),
           lastLoginAt: new Date().toISOString(),
         };

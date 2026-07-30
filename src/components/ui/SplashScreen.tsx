@@ -134,7 +134,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
         >
           <img
-            src="/logo.svg"
+            src="/logo.png"
             alt="Obsidian Arena"
             className="w-28 h-28 drop-shadow-[0_0_20px_rgba(138,43,226,0.5)]"
           />
