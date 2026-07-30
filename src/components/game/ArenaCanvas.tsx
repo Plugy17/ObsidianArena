@@ -974,11 +974,11 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ onMatchEnd }) => {
   const gold = s?.getGold() ?? 1000;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-obsidian-900 select-none">
-      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ minWidth: '100vw', minHeight: '100vh' }} />
+    <div className="relative w-full h-full bg-obsidian-900 select-none" style={{ zIndex: 0 }}>
+      <div ref={containerRef} className="relative w-full h-full" style={{ minHeight: '600px' }} />
 
       {/* Top HUD — Nexus HP + Stats */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20 pointer-events-none">
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-3 z-30 pointer-events-none">
         <div className="flex items-center gap-2 bg-black/50 rounded-lg px-3 py-1.5 border border-blue-500/30">
           <span className="text-blue-400 text-xs font-bold" style={{ fontFamily: 'monospace' }}>NEXUS</span>
           <div className="w-20 h-2.5 bg-black/60 rounded-full overflow-hidden border border-white/20">
@@ -995,7 +995,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ onMatchEnd }) => {
       </div>
 
       {/* Player stats (top-left) */}
-      <div className="absolute top-12 left-3 z-20 pointer-events-none">
+      <div className="absolute top-12 left-3 z-30 pointer-events-none">
         <div className="flex items-center gap-3 bg-black/50 rounded-xl px-3 py-2 border border-purple-neon/30">
           {/* Avatar */}
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-neon to-purple-900 border-2 border-white/50 flex items-center justify-center text-2xl shadow-lg">
@@ -1020,7 +1020,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ onMatchEnd }) => {
       </div>
 
       {/* Enemy stats (top-right) */}
-      <div className="absolute top-12 right-3 z-20 pointer-events-none">
+      <div className="absolute top-12 right-3 z-30 pointer-events-none">
         <div className="flex items-center gap-3 bg-black/50 rounded-xl px-3 py-2 border border-red-500/30">
           <div className="flex flex-col gap-1 items-end">
             <div className="flex items-center gap-1">
@@ -1049,12 +1049,12 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ onMatchEnd }) => {
       )}
 
       {/* Virtual Joystick (bottom-left) */}
-      <div className="absolute bottom-8 left-8 z-20">
+      <div className="absolute bottom-8 left-8 z-30">
         <VirtualJoystick onMove={handleMove} />
       </div>
 
       {/* Action buttons (bottom-right) */}
-      <div className="absolute bottom-8 right-8 z-20 flex items-end gap-4">
+      <div className="absolute bottom-8 right-8 z-30 flex items-end gap-4">
         <ActionButton
           label="Dash"
           icon="💨"
