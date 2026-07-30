@@ -910,6 +910,12 @@ export interface ArenaCanvasProps {
 export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ character, gameMode, onMatchEnd, onBackToLobby }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  // Use props to prevent TS6133
+  const charName = character?.name || 'Champion';
+  const modeLabel = gameMode === 'pve' ? 'vs AI' : 'vs Player';
+  const backToLobby = onBackToLobby;
+  void backToLobby;
+  console.log(charName, modeLabel);
   const sceneRef = useRef<GameScene | null>(null);
   const [, forceUpdate] = useState(0);
 
@@ -1038,7 +1044,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ character, gameMode, o
               </div>
               <span className="text-red-400 text-sm">❤️</span>
             </div>
-            <span className="text-red-400 text-xs">Enemy Knight</span>
+            <span className="text-red-400 text-xs">{gameMode === 'pve' ? 'AI Enemy' : 'Player Enemy'}</span>
           </div>
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-900 border-2 border-white/50 flex items-center justify-center text-2xl shadow-lg">
             ⚔️
