@@ -21,6 +21,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
     (state) => state.setIsTelegramAvailable
   );
   const setSafeAreaInsets = useGameStore((state) => state.setSafeAreaInsets);
+  const telegramUser = useGameStore((state) => state.telegramUser);
 
   // Auto-authenticate from Telegram WebApp SDK
   useEffect(() => {
@@ -30,14 +31,10 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
 
     // Expand to fullscreen
     if (available && tg) {
-      (tg as any).ready(); // Явно указываем тип как any, чтобы обойти ошибку TypeScript
+      (tg as any).ready();
       tg.expand();
-      // Включаем истинный Fullscreen (Bot API 8.0+)
-      if (typeof (tg as any).requestFullscreen === 'function') {
-        // (tg as any).requestFullscreen(); // Включается автоматически при expand() в Telegram Mini Apps
-      }
 
-      // Красим шапку и фон в цвет темы приложения (#0d0d12)
+      // Красим шапку и фон в цвет темы приложения
       tg.setHeaderColor('#0d0d12');
       tg.setBackgroundColor('#0d0d12');
       tg.enableClosingConfirmation();
@@ -129,63 +126,18 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        {/* Obsidian crystal icon */}
+        {/* Logo image */}
         <motion.div
           className="mx-auto mb-6 relative"
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
         >
-          <svg
-            width="80"
-            height="80"
-            viewBox="0 0 80 80"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <motion.path
-              d="M40 5 L65 25 L55 70 L25 70 L15 25 Z"
-              fill="url(#obsidianGradient)"
-              stroke="#8a2be2"
-              strokeWidth="2"
-              filter="url(#glow)"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1.5, ease: 'easeInOut' }}
-            />
-            <path
-              d="M40 5 L40 70"
-              stroke="#daa520"
-              strokeWidth="1"
-              opacity="0.5"
-            />
-            <path
-              d="M15 25 L65 25"
-              stroke="#daa520"
-              strokeWidth="1"
-              opacity="0.3"
-            />
-            <defs>
-              <linearGradient
-                id="obsidianGradient"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop offset="0%" stopColor="#1a1a2e" />
-                <stop offset="50%" stopColor="#2d1b4e" />
-                <stop offset="100%" stopColor="#0d0d12" />
-              </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                <feMerge>
-                  <feMergeNode in="coloredBlur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-          </svg>
+          <img
+            src="/logo.svg"
+            alt="Obsidian Arena"
+            className="w-28 h-28 drop-shadow-[0_0_20px_rgba(138,43,226,0.5)]"
+          />
         </motion.div>
 
         {/* Title */}
@@ -211,6 +163,38 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         >
           ARENA
         </motion.h2>
+
+        {/* Telegram user info */}
+        {telegramUser?.first_name && (
+          <motion.div
+            className="mt-4 flex items-center justify-center gap-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            {telegramUser.photo_url && (
+              <img
+                src={telegramUser.photo_url}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full border-2 border-purple-neon/50"
+              />
+            )}
+            <div className="text-left">
+              <p className="text-sm text-text-secondary">
+                Привет,{' '}
+                <span className="text-gold font-bold">
+                  {telegramUser.first_name}
+                </span>
+                !
+              </p>
+              {telegramUser.username && (
+                <p className="text-xs text-text-tertiary">
+                  @{telegramUser.username}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Loading text */}
         <motion.p

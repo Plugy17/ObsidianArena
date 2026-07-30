@@ -104,6 +104,14 @@ const MatchSetup: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
     >
+      <motion.img
+        src="/logo.svg"
+        alt="Obsidian Arena"
+        className="w-20 h-20 mb-6 drop-shadow-[0_0_20px_rgba(138,43,226,0.5)]"
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+      />
       <h1 className="text-3xl md:text-4xl font-bold text-gradient-purple mb-4 text-center">
         MOBA Арена
       </h1>
@@ -244,7 +252,11 @@ export const MobaArena: React.FC = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw background
-    ctx.fillStyle = '#0a0a12';
+    const bgGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    bgGradient.addColorStop(0, '#0a0a12');
+    bgGradient.addColorStop(0.5, '#1a1a2e');
+    bgGradient.addColorStop(1, '#0d0d1a');
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw grid

@@ -1,1 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><circle cx="100" cy="100" r="96" fill="#0d0d12" stroke="#1f1540" stroke-width="5"/><path d="M100 35 L145 80 L130 155 L70 155 L55 80 Z" fill="#13111f" stroke="#8a2be2" stroke-width="3"/><path d="M100 60 L120 85 L110 140 L90 140 L80 85 Z" fill="#0a0a10" stroke="#daa520" stroke-width="2" opacity="0.7"/><path d="M100 75 L100 130 M80 95 L120 95" stroke="#daa520" stroke-width="1.2" opacity="0.4"/></svg>
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a2be2"/>
+      <stop offset="50%" stop-color="#9d4edd"/>
+      <stop offset="100%" stop-color="#daa520"/>
+    </linearGradient>
+    <linearGradient id="logoGradient2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0d0d12"/>
+    </linearGradient>
+    <filter id="logoGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="logoGlowStrong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Background glow -->
+  <circle cx="100" cy="100" r="85" fill="url(#logoGradient)" opacity="0.15" filter="url(#logoGlowStrong)"/>
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="78" fill="url(#logoGradient2)" stroke="url(#logoGradient)" stroke-width="2" opacity="0.8"/>
+  <!-- Obsidian crystal -->
+  <path d="M100 25 L155 60 L140 155 L60 155 L45 60 Z" fill="url(#logoGradient)" stroke="#8a2be2" stroke-width="3" filter="url(#logoGlow)"/>
+  <!-- Crystal facets -->
+  <path d="M100 25 L100 155" stroke="#daa520" stroke-width="1.5" opacity="0.6"/>
+  <path d="M45 60 L155 60" stroke="#daa520" stroke-width="1.5" opacity="0.4"/>
+  <path d="M60 155 L140 155" stroke="#daa520" stroke-width="1.5" opacity="0.5"/>
+  <path d="M100 25 L60 155" stroke="#8a2be2" stroke-width="1" opacity="0.3"/>
+  <path d="M100 25 L140 155" stroke="#8a2be2" stroke-width="1" opacity="0.3"/>
+  <!-- Center gem -->
+  <circle cx="100" cy="95" r="12" fill="#0d0d12" stroke="#daa520" stroke-width="2"/>
+  <circle cx="100" cy="95" r="8" fill="url(#logoGradient)" opacity="0.9"/>
+  <!-- Sparkle effects -->
+  <circle cx="75" cy="70" r="2.5" fill="#ffffff" opacity="0.8"/>
+  <circle cx="125" cy="75" r="2" fill="#ffffff" opacity="0.7"/>
+  <circle cx="80" cy="120" r="1.5" fill="#ffffff" opacity="0.6"/>
+  <circle cx="120" cy="125" r="2" fill="#ffffff" opacity="0.75"/>
+</svg>

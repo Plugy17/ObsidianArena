@@ -132,9 +132,37 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       //   setUser(newUser);
       // }
 
-      // For development, use mock data
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setUser(MOCK_USER);
+      // Get Telegram user from game store
+      const tgUser = useGameStore.getState().telegramUser;
+
+      let userToUse: User;
+
+      if (tgUser) {
+        // Use Telegram data
+        userToUse = {
+          id: `tg-${tgUser.id}`,
+          telegramId: tgUser.id,
+          username: tgUser.username || 'player',
+          firstName: tgUser.first_name || 'Игрок',
+          lastName: tgUser.last_name || '',
+          avatarUrl: tgUser.photo_url || 'https://placehold.co/100x100/8a2be2/ffffff?text=AW',
+          walletAddress: '',
+          obsidianBalance: 1000,
+          gramBalance: 0,
+          level: 1,
+          experience: 0,
+          selectedCharacterId: 'char-1',
+          guildId: null,
+          createdAt: new Date().toISOString(),
+          lastLoginAt: new Date().toISOString(),
+        };
+      } else {
+        // Fallback to mock data
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        userToUse = MOCK_USER;
+      }
+
+      setUser(userToUse);
       setCharacters(MOCK_CHARACTERS);
       setInventory(MOCK_ITEMS);
       setGuilds(MOCK_GUILDS);
@@ -149,8 +177,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       setIsLoading(false);
 
       // Sync balance with Zustand game store
-      useGameStore.getState().setObsidianBalance(MOCK_USER.obsidianBalance);
-      useGameStore.getState().setGramBalance(MOCK_USER.gramBalance || 0);
+      useGameStore.getState().setObsidianBalance(userToUse.obsidianBalance);
+      useGameStore.getState().setGramBalance(userToUse.gramBalance || 0);
     };
 
     initializeUser();
