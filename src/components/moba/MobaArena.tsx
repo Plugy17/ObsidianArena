@@ -3,8 +3,8 @@
 // ============================================
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sword, Skull, Trophy, Gem, RefreshCw } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Sword, Skull, RefreshCw } from 'lucide-react';
 import { MatchEngine, createMatchEngine } from '../../logic/moba/matchEngine';
 import {
   drawChampion,
@@ -145,7 +145,6 @@ const MatchSetup: React.FC<{
 // --- Main MOBA Arena Component ---
 export const MobaArena: React.FC = () => {
   const { selectedCharacter } = useUser();
-  const telegramUser = useGameStore((state) => state.telegramUser);
   const [matchEngine, setMatchEngine] = useState<MatchEngine | null>(null);
   const [matchState, setMatchState] = useState<any>(null);
   const [gamePhase, setGamePhase] = useState<'setup' | 'playing' | 'result'>('setup');

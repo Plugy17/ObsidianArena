@@ -190,7 +190,7 @@ export const useKeyboardControls = (
   }, [submitCommand]);
 
   // --- Handle mouse up ---
-  const handleMouseUp = useCallback((e: MouseEvent) => {
+  const handleMouseUp = useCallback(() => {
     setIsMouseDown(false);
   }, []);
 

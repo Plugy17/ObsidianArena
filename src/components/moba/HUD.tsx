@@ -3,8 +3,8 @@
 // ============================================
 
 import { motion } from 'framer-motion';
-import { Sword, Shield, Zap, Heart, Clock, Gem, Trophy, Skull } from 'lucide-react';
-import type { ChampionEntity, MatchStateData } from '../../logic/moba/types';
+import { Zap, Heart, Clock, Gem, Skull } from 'lucide-react';
+import type { MatchStateData } from '../../logic/moba/types';
 
 interface HUDProps {
   matchState: MatchStateData;

@@ -9,7 +9,6 @@ import type {
   Tower,
   Nexus,
   Lane,
-  LaneType,
   CooldownManager,
   AbilityDefinition,
 } from './types';
@@ -431,7 +430,7 @@ export const createAllStructures = (
 
 // --- Create Initial Match State ---
 export const createInitialMatchState = (
-  matchId: string,
+  _matchId: string,
   mode: 'pve' | 'pvp',
   playerCharacter: CharacterData,
   enemyCharacter: CharacterData | null,

@@ -3,7 +3,6 @@
 // ============================================
 
 import type {
-  Vector2D,
   ChampionEntity,
   CreepEntity,
   Tower,
@@ -11,7 +10,7 @@ import type {
   CombatEntity,
   InputCommand,
 } from './types';
-import { calculateDistance, normalizeVector, vectorToTarget } from './vectorEngine';
+import { calculateDistance } from './vectorEngine';
 
 // --- AI Difficulty Levels ---
 export type AIDifficulty = 'easy' | 'normal' | 'hard';

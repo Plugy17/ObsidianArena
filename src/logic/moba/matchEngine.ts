@@ -9,7 +9,6 @@ import type {
   Tower,
   Nexus,
   Lane,
-  Wave,
   Skillshot,
   MatchStateData,
   MatchState,
@@ -30,7 +29,6 @@ import {
   checkSkillshotCollision,
 } from './vectorEngine';
 import {
-  createCooldownManager,
   tickCooldowns,
   useAbility,
   isAbilityReady,
@@ -40,7 +38,6 @@ import {
   createInitialMatchState,
   createWave,
   DEFAULT_MATCH_CONFIG,
-  LANE_DEFINITIONS,
 } from './unitFactory';
 import type { CharacterData } from './unitFactory';
 
@@ -49,13 +46,10 @@ export class MatchEngine {
   private state: MatchStateData;
   private config: MatchConfig;
   private events: MatchEvent[] = [];
-  private lastUpdateTime: number = 0;
   private waveNumbers: Map<string, number> = new Map();
   private playerPathIndex: Map<string, number> = new Map();
   private enemyPathIndex: Map<string, number> = new Map();
   private abilityDefs: AbilityDefinition[];
-  private characterData: CharacterData;
-  private enemyCharacterData: CharacterData | null;
   private pendingCommands: InputCommand[] = [];
 
   constructor(
@@ -508,7 +502,7 @@ export class MatchEngine {
   }
 
   // --- Update towers ---
-  private updateTowers(deltaTime: number): void {
+  private updateTowers(_deltaTime: number): void {
     const now = this.state.gameTime;
 
     for (const tower of this.state.towers) {
@@ -708,7 +702,7 @@ export class MatchEngine {
   }
 
   // --- Grant gold and XP for kill ---
-  private grantGoldAndXP(victim: ChampionEntity, damage: number): void {
+  private grantGoldAndXP(_victim: ChampionEntity, _damage: number): void {
     this.state.playerGold += this.config.goldPerKill;
     this.state.playerXP += this.config.xpPerKill;
 
