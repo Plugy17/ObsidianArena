@@ -910,15 +910,20 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ onMatchEnd }) => {
     const scene = new GameScene();
     sceneRef.current = scene;
 
+    const container = containerRef.current;
+    const w = container.clientWidth || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
+
     const game = new Phaser.Game({
       type: Phaser.AUTO,
-      parent: containerRef.current,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
+      parent: container,
+      width: w,
+      height: h,
+      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       physics: { default: 'arcade', arcade: { debug: false } },
       scene: [scene],
       render: { antialias: true, pixelArt: false },
+      backgroundColor: '#0a0f0a',
     });
     gameRef.current = game;
 
@@ -960,7 +965,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ onMatchEnd }) => {
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-obsidian-900 select-none">
-      <div ref={containerRef} className="absolute inset-0" />
+      <div ref={containerRef} className="absolute inset-0 w-full h-full" style={{ minWidth: '100vw', minHeight: '100vh' }} />
 
       {/* Top HUD — Nexus HP + Stats */}
       <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20 pointer-events-none">
