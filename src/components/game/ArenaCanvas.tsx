@@ -381,7 +381,7 @@ class GameScene extends Phaser.Scene {
     for (const m of this.minions) {
       if (m.data.hp <= 0) continue;
       const targetX = m.data.team === 'player' ? ARENA_W : 0;
-      const dx = targetX - m.data.x, dy = 0;
+      const dx = targetX - m.data.x;
       const dist = Math.abs(dx);
       if (dist > 10) {
         m.data.x += (dx / dist) * (MINION_SPEED / 60);
