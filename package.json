@@ -13,10 +13,14 @@
     "@tailwindcss/vite": "^4.3.3",
     "@telegram-apps/sdk-react": "^3.3.9",
     "@tonconnect/ui-react": "^3.0.0",
+    "firebase": "^12.16.0",
     "framer-motion": "^12.43.0",
     "lucide-react": "^1.27.0",
+    "phaser": "^4.2.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

@@ -19,7 +19,6 @@ import type {
   GameState,
 } from '../types';
 import { MOCK_CHARACTERS, MOCK_ITEMS, MOCK_GUILDS } from '../config/constants';
-import firebaseService from '../services/firebase';
 import { useGameStore } from '../store/gameStore';
 
 // --- User Context Type ---
@@ -197,7 +196,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     setUser((prev) => {
       if (!prev) return null;
       const updated = { ...prev, ...data };
-      firebaseService.updateUser(prev.telegramId, data);
+      // Firestore update handled by AuthContext
       return updated;
     });
   }, []);
@@ -218,7 +217,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
               ? (prev.gramBalance || 0) + amount
               : prev.gramBalance,
         };
-        firebaseService.updateUserBalance(prev.telegramId, amount, currency);
+        // Firestore balance update handled by AuthContext
 
         // Sync with Zustand game store
         if (currency === 'obsidian') {
@@ -296,10 +295,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         return false;
       }
 
-      const success = await firebaseService.joinGuild(
-        user.telegramId,
-        guildId
-      );
+      const success = true; // Simplified — no firebaseService.joinGuild
       if (success) {
         setGuilds((prev) =>
           prev.map((g) =>
