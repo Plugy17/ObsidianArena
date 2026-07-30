@@ -26,6 +26,37 @@ const NEXUS_HP = 600;
 const PLAYER_HP = 120;
 const RESPAWN_TIME = 5000;
 
+// --- Isometric constants ---
+const ISO_TILE_W = 64;
+const ISO_TILE_H = 32;
+const TILES_X = 20;
+const TILES_Y = 11;
+
+
+
+// Convert cartesian (world) to isometric screen coordinates
+function cartToIso(cx: number, cy: number): { x: number; y: number } {
+  const tx = cx / ISO_TILE_W;
+  const ty = cy / ISO_TILE_H;
+  return {
+    x: (tx - ty) * (ISO_TILE_W / 2) + ARENA_WIDTH / 2,
+    y: (tx + ty) * (ISO_TILE_H / 2) + 60,
+  };
+}
+
+// Convert isometric tile to cartesian
+function isoToCart(tx: number, ty: number): { x: number; y: number } {
+  return {
+    x: (tx - ty) * (ISO_TILE_W / 2),
+    y: (tx + ty) * (ISO_TILE_H / 2),
+  };
+}
+
+// Depth sort key: higher y = drawn first (behind)
+function depthSortKey(worldX: number, worldY: number): number {
+  return worldX + worldY;
+}
+
 // --- Types ---
 interface TowerData { x: number; y: number; team: 'player' | 'enemy'; hp: number; maxHp: number; tier: number; }
 interface BushData { x: number; y: number; w: number; h: number; }
@@ -39,11 +70,15 @@ class GameScene extends Phaser.Scene {
   public onBackToLobby: () => void = () => {};
 
   private player!: Phaser.GameObjects.Container;
+  private playerCartX = 120;
+  private playerCartY = LANE_Y;
   private playerHp = PLAYER_HP;
   private playerMaxHp = PLAYER_HP;
   private playerAnimPhase = 0;
   private playerMoving = false;
   private enemy!: Phaser.GameObjects.Container;
+  private enemyCartX = ARENA_WIDTH - 120;
+  private enemyCartY = LANE_Y;
   private enemyHp = PLAYER_HP;
   private enemyMaxHp = PLAYER_HP;
   private enemyAnimPhase = 0;
@@ -102,8 +137,8 @@ class GameScene extends Phaser.Scene {
     const color = team === 'player' ? 0x8a2be2 : 0xff5252;
     const darkColor = team === 'player' ? 0x4a1a8a : 0x8a1a1a;
 
-    // Shadow
-    const shadow = this.add.ellipse(0, 18, 36, 12, 0x000000, 0.4);
+    // Isometric shadow (elongated ellipse)
+    const shadow = this.add.ellipse(0, 22, 44, 16, 0x000000, 0.35);
     container.add(shadow);
 
     // Body (armor)
@@ -166,8 +201,8 @@ class GameScene extends Phaser.Scene {
     const color = team === 'player' ? 0x4a90d9 : 0xd94a4a;
     const darkColor = team === 'player' ? 0x2a5089 : 0x8a2a2a;
 
-    // Shadow
-    const shadow = this.add.ellipse(0, 30, 50, 14, 0x000000, 0.4);
+    // Isometric shadow
+    const shadow = this.add.ellipse(0, 35, 56, 18, 0x000000, 0.4);
     container.add(shadow);
 
     // Base (stone)
@@ -227,8 +262,8 @@ class GameScene extends Phaser.Scene {
     const color = team === 'player' ? 0x4a90d9 : 0xd94a4a;
     const darkColor = team === 'player' ? 0x2a5089 : 0x8a2a2a;
 
-    // Shadow
-    const shadow = this.add.ellipse(0, 40, 80, 20, 0x000000, 0.5);
+    // Isometric shadow (large ellipse)
+    const shadow = this.add.ellipse(0, 45, 90, 24, 0x000000, 0.5);
     container.add(shadow);
 
     // Base platform
@@ -293,81 +328,105 @@ class GameScene extends Phaser.Scene {
   }
 
   private createPlayer() {
-    this.player = this.drawHero(120, LANE_Y, 'player');
-    this.add.text(120, LANE_Y - 40, 'You', {
+    const iso = cartToIso(120, LANE_Y);
+    this.player = this.drawHero(iso.x, iso.y, 'player');
+    this.player.setDepth(depthSortKey(120, LANE_Y) + 30);
+    this.add.text(iso.x, iso.y - 45, 'You', {
       fontSize: '14px', color: '#8a2be2', fontStyle: 'bold',
       stroke: '#000', strokeThickness: 3,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(999);
   }
 
   private createEnemy() {
-    this.enemy = this.drawHero(ARENA_WIDTH - 120, LANE_Y, 'enemy');
-    this.add.text(ARENA_WIDTH - 120, LANE_Y - 40, 'Enemy', {
+    const iso = cartToIso(ARENA_WIDTH - 120, LANE_Y);
+    this.enemy = this.drawHero(iso.x, iso.y, 'enemy');
+    this.enemy.setDepth(depthSortKey(ARENA_WIDTH - 120, LANE_Y) + 30);
+    this.add.text(iso.x, iso.y - 45, 'Enemy', {
       fontSize: '14px', color: '#ff5252', fontStyle: 'bold',
       stroke: '#000', strokeThickness: 3,
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setDepth(999);
   }
 
   private createArenaBackground() {
     const g = this.add.graphics();
-    // Base grass
-    g.fillStyle(0x1a3a1a, 1);
+    
+    // Dark background
+    g.fillStyle(0x0a0f0a, 1);
     g.fillRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
 
-    // Grass texture patches (multiple shades)
-    for (let i = 0; i < 80; i++) {
-      const x = Phaser.Math.Between(0, ARENA_WIDTH);
-      const y = Phaser.Math.Between(0, ARENA_HEIGHT);
-      const r = Phaser.Math.Between(15, 50);
-      const shade = Phaser.Math.Between(0, 2);
-      const colors = [0x2d5a2d, 0x3a6a3a, 0x1a4a1a];
-      g.fillStyle(colors[shade], 0.3);
-      g.fillCircle(x, y, r);
+    // Draw isometric tiles
+    for (let ty = 0; ty < TILES_Y; ty++) {
+      for (let tx = 0; tx < TILES_X; tx++) {
+        const cart = isoToCart(tx, ty);
+        const iso = cartToIso(cart.x, cart.y);
+        
+        // Determine tile color based on position
+        let color = 0x1a3a1a; // default grass
+        let alpha = 0.85;
+        
+        // Lane tiles (dirt path)
+        const distToLane = Math.abs(cart.y);
+        if (distToLane < 70) {
+          color = 0x6b5b3a;
+          alpha = 0.7;
+        } else if (distToLane < 90) {
+          color = 0x5b4b2a;
+          alpha = 0.5;
+        }
+        
+        // Random grass variation
+        if (color === 0x1a3a1a) {
+          const shades = [0x1a3a1a, 0x2d5a2d, 0x3a6a3a, 0x1a4a1a];
+          color = shades[Phaser.Math.Between(0, 3)];
+        }
+        
+        this.drawIsoTile(iso.x, iso.y, color, alpha);
+      }
     }
-
+    
     // Stone decorations
-    for (let i = 0; i < 30; i++) {
-      const x = Phaser.Math.Between(0, ARENA_WIDTH);
-      const y = Phaser.Math.Between(0, ARENA_HEIGHT);
-      const r = Phaser.Math.Between(4, 12);
-      this.stoneDecorations.push({ x, y, r });
-      g.fillStyle(0x555555, 0.6);
-      g.fillCircle(x, y, r);
-      g.fillStyle(0x666666, 0.4);
-      g.fillCircle(x - 1, y - 1, r * 0.7);
+    for (let i = 0; i < 20; i++) {
+      const cx = Phaser.Math.Between(80, ARENA_WIDTH - 80);
+      const cy = Phaser.Math.Between(80, ARENA_HEIGHT - 80);
+      const iso = cartToIso(cx, cy);
+      this.stoneDecorations.push({ x: cx, y: cy, r: Phaser.Math.Between(4, 10) });
+      
+      // Draw stone shadow
+      g.fillStyle(0x000000, 0.3);
+      g.fillEllipse(iso.x, iso.y + 4, 12, 6);
+      // Draw stone
+      g.fillStyle(0x555555, 0.7);
+      g.fillEllipse(iso.x, iso.y, 10, 6);
+      g.fillStyle(0x666666, 0.5);
+      g.fillEllipse(iso.x - 1, iso.y - 1, 7, 4);
     }
+  }
 
-    // Dark border areas (top/bottom)
-    g.fillStyle(0x0a1a0a, 0.5);
-    g.fillRect(0, 0, ARENA_WIDTH, 80);
-    g.fillRect(0, ARENA_HEIGHT - 80, ARENA_WIDTH, 80);
+  private drawIsoTile(x: number, y: number, color: number, alpha: number) {
+    const g = this.add.graphics();
+    const hw = ISO_TILE_W / 2;
+    const hh = ISO_TILE_H / 2;
+    
+    // Diamond shape
+    g.fillStyle(color, alpha);
+    g.beginPath();
+    g.moveTo(x, y - hh);
+    g.lineTo(x + hw, y);
+    g.lineTo(x, y + hh);
+    g.lineTo(x - hw, y);
+    g.closePath();
+    g.fillPath();
+    
+    // Tile border
+    g.lineStyle(1, 0x000000, 0.08);
+    g.strokePath();
   }
 
   private createLane() {
     const g = this.add.graphics();
-    // Dirt path base
-    g.fillStyle(0x6b5b3a, 0.5);
-    g.fillRect(0, LANE_Y - 70, ARENA_WIDTH, 140);
-    // Path texture (darker patches)
-    g.fillStyle(0x5b4b2a, 0.3);
-    for (let x = 0; x < ARENA_WIDTH; x += 40) {
-      if (Phaser.Math.Between(0, 2) === 0) {
-        g.fillRect(x, LANE_Y - 60 + Phaser.Math.Between(-10, 10), 30, 20);
-      }
-    }
-    // Path borders (stone edges)
-    g.lineStyle(3, 0x8b7b5a, 0.4);
-    g.lineBetween(0, LANE_Y - 70, ARENA_WIDTH, LANE_Y - 70);
-    g.lineBetween(0, LANE_Y + 70, ARENA_WIDTH, LANE_Y + 70);
-    // Blue path line (thin effect)
-    g.lineStyle(2, 0x4a90d9, 0.15);
+    // Lane is now handled in tile rendering, but draw the blue line
+    g.lineStyle(2, 0x4a90d9, 0.12);
     g.lineBetween(0, LANE_Y, ARENA_WIDTH, LANE_Y);
-    // Small stones along path
-    g.fillStyle(0x666666, 0.4);
-    for (let x = 50; x < ARENA_WIDTH; x += 80) {
-      g.fillCircle(x, LANE_Y - 65, 3);
-      g.fillCircle(x + 40, LANE_Y + 65, 3);
-    }
   }
 
   private createBushes() {
@@ -381,17 +440,17 @@ class GameScene extends Phaser.Scene {
       { x: 640, y: 360, w: 90, h: 90 },
     ];
     for (const b of bushData) {
-      // Bush base
-      const bush = this.add.rectangle(b.x, b.y, b.w, b.h, 0x1a4a1a, 0.5);
-      bush.setStrokeStyle(2, 0x2d6a2d, 0.4);
+      const iso = cartToIso(b.x, b.y);
+      const bush = this.add.rectangle(iso.x, iso.y, b.w, b.h * 0.6, 0x1a4a1a, 0.4);
+      bush.setStrokeStyle(2, 0x2d6a2d, 0.3);
       this.bushes.push(bush);
-      // Bush leaves (cluster of circles)
-      for (let i = 0; i < 12; i++) {
-        const lx = b.x + Phaser.Math.Between(-b.w/2 + 8, b.w/2 - 8);
-        const ly = b.y + Phaser.Math.Between(-b.h/2 + 8, b.h/2 - 8);
-        const lr = Phaser.Math.Between(5, 10);
-        const leaf = this.add.circle(lx, ly, lr, 0x2d8a2d, 0.5);
-        leaf.setStrokeStyle(1, 0x1a6a1a, 0.3);
+      // Leaves
+      for (let i = 0; i < 10; i++) {
+        const lx = iso.x + Phaser.Math.Between(-b.w/2 + 8, b.w/2 - 8);
+        const ly = iso.y + Phaser.Math.Between(-b.h/3 + 5, b.h/3 - 5);
+        const lr = Phaser.Math.Between(6, 12);
+        const leaf = this.add.circle(lx, ly, lr, 0x2d8a2d, 0.4);
+        leaf.setDepth(depthSortKey(b.x, b.y) + 5);
       }
     }
   }
@@ -404,14 +463,22 @@ class GameScene extends Phaser.Scene {
       { x: 930, y: LANE_Y, team: 'enemy', hp: TOWER_HP, maxHp: TOWER_HP, tier: 1 },
     ];
     for (const td of towerPositions) {
-      const container = this.drawTower(td.x, td.y, td.team);
+      const iso = cartToIso(td.x, td.y);
+      td.x = iso.x;
+      td.y = iso.y;
+      const container = this.drawTower(iso.x, iso.y, td.team);
+      container.setDepth(depthSortKey(td.x, td.y) + 10);
       this.towers.push({ container, data: td });
     }
   }
 
   private createNexuses() {
-    this.nexusLeft = this.drawNexus(60, LANE_Y, 'player');
-    this.nexusRight = this.drawNexus(ARENA_WIDTH - 60, LANE_Y, 'enemy');
+    const leftIso = cartToIso(60, LANE_Y);
+    const rightIso = cartToIso(ARENA_WIDTH - 60, LANE_Y);
+    this.nexusLeft = this.drawNexus(leftIso.x, leftIso.y, 'player');
+    this.nexusLeft.setDepth(depthSortKey(60, LANE_Y) + 20);
+    this.nexusRight = this.drawNexus(rightIso.x, rightIso.y, 'enemy');
+    this.nexusRight.setDepth(depthSortKey(ARENA_WIDTH - 60, LANE_Y) + 20);
   }
 
   setMoveDirection(x: number, y: number) {
@@ -426,9 +493,9 @@ class GameScene extends Phaser.Scene {
     this.lastAttack = now;
     const target = this.findNearestTarget();
     if (target) {
-      this.createProjectile(this.player.x + 14, this.player.y - 5, target.x, target.y, ATTACK_DAMAGE, 'player', false);
-      // Attack spark particles
-      this.spawnParticles(this.player.x + 14, this.player.y - 5, 5, 0xffd700, 3, 200);
+      const iso = cartToIso(this.playerCartX, this.playerCartY);
+      this.createProjectile(iso.x + 14, iso.y - 5, target.x, target.y, ATTACK_DAMAGE, 'player', false);
+      this.spawnParticles(iso.x + 14, iso.y - 5, 5, 0xffd700, 3, 200);
     }
   }
 
@@ -437,13 +504,14 @@ class GameScene extends Phaser.Scene {
     if (now - this.skill1Cd < SKILL1_COOLDOWN) return;
     if (this.respawnTimer > 0) return;
     this.skill1Cd = now;
+    const iso = cartToIso(this.playerCartX, this.playerCartY);
     // AoE effect
-    const fx = this.add.circle(this.player.x, this.player.y, SKILL1_RANGE, 0xff6b35, 0.25);
+    const fx = this.add.circle(iso.x, iso.y, SKILL1_RANGE, 0xff6b35, 0.25);
     fx.setStrokeStyle(3, 0xff6b35, 0.6);
     this.tweens.add({ targets: fx, scale: 1.5, alpha: 0, duration: 500, onComplete: () => fx.destroy() });
     // Spark particles
-    this.spawnParticles(this.player.x, this.player.y, 15, 0xff6b35, 5, 400);
-    this.damageInRange(this.player.x, this.player.y, SKILL1_RANGE, SKILL1_DAMAGE, 'player');
+    this.spawnParticles(iso.x, iso.y, 15, 0xff6b35, 5, 400);
+    this.damageInRange(this.playerCartX, this.playerCartY, SKILL1_RANGE, SKILL1_DAMAGE, 'player');
   }
 
   skill2() {
@@ -453,17 +521,18 @@ class GameScene extends Phaser.Scene {
     this.skill2Cd = now;
     const target = this.findNearestTarget();
     if (target) {
-      this.createProjectile(this.player.x, this.player.y, target.x, target.y, SKILL2_DAMAGE, 'player', true);
-      this.spawnParticles(this.player.x, this.player.y, 10, 0x00e5ff, 4, 300);
+      const iso = cartToIso(this.playerCartX, this.playerCartY);
+      this.createProjectile(iso.x, iso.y, target.x, target.y, SKILL2_DAMAGE, 'player', true);
+      this.spawnParticles(iso.x, iso.y, 10, 0x00e5ff, 4, 300);
     }
   }
 
   private findNearestTarget(): { x: number; y: number } | null {
     let nearest: { x: number; y: number; dist: number } | null = null as { x: number; y: number; dist: number } | null;
-    const px = this.player.x, py = this.player.y;
+    const px = this.playerCartX, py = this.playerCartY;
     if (this.enemyRespawnTimer <= 0) {
-      const d = Phaser.Math.Distance.Between(px, py, this.enemy.x, this.enemy.y);
-      if (!nearest || d < nearest.dist) nearest = { x: this.enemy.x, y: this.enemy.y, dist: d };
+      const d = Phaser.Math.Distance.Between(px, py, this.enemyCartX, this.enemyCartY);
+      if (!nearest || d < nearest.dist) nearest = { x: this.enemyCartX, y: this.enemyCartY, dist: d };
     }
     for (const t of this.towers) {
       if (t.data.team === 'enemy' && t.data.hp > 0) {
@@ -538,11 +607,19 @@ class GameScene extends Phaser.Scene {
 
     // --- Player movement + run animation ---
     if (this.respawnTimer <= 0) {
-      const speed = PLAYER_SPEED / 60;
-      this.player.x += this.moveDir.x * speed;
-      this.player.y += this.moveDir.y * speed;
-      this.player.x = Phaser.Math.Clamp(this.player.x, 20, ARENA_WIDTH - 20);
-      this.player.y = Phaser.Math.Clamp(this.player.y, 20, ARENA_HEIGHT - 20);
+      // Store cartesian position for game logic
+      if (this.moveDir.x !== 0 || this.moveDir.y !== 0) {
+        this.playerCartX += this.moveDir.x * (PLAYER_SPEED / 60);
+        this.playerCartY += this.moveDir.y * (PLAYER_SPEED / 60);
+        this.playerCartX = Phaser.Math.Clamp(this.playerCartX, 20, ARENA_WIDTH - 20);
+        this.playerCartY = Phaser.Math.Clamp(this.playerCartY, 20, ARENA_HEIGHT - 20);
+        
+        // Convert to isometric screen position
+        const iso = cartToIso(this.playerCartX, this.playerCartY);
+        this.player.x = iso.x;
+        this.player.y = iso.y;
+        this.player.setDepth(depthSortKey(this.playerCartX, this.playerCartY) + 30);
+      }
 
       // Run animation (bobbing)
       if (this.playerMoving) {
@@ -557,20 +634,29 @@ class GameScene extends Phaser.Scene {
 
     // --- Enemy AI + animation ---
     if (this.enemyRespawnTimer <= 0) {
-      const dx = this.player.x - this.enemy.x;
-      const dy = this.player.y - this.enemy.y;
+      const dx = this.playerCartX - this.enemyCartX;
+      const dy = this.playerCartY - this.enemyCartY;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > ATTACK_RANGE) {
-        this.enemy.x += (dx / dist) * (PLAYER_SPEED * 0.7 / 60);
-        this.enemy.y += (dy / dist) * (PLAYER_SPEED * 0.7 / 60);
+        this.enemyCartX += (dx / dist) * (PLAYER_SPEED * 0.7 / 60);
+        this.enemyCartY += (dy / dist) * (PLAYER_SPEED * 0.7 / 60);
+        
+        // Convert to isometric
+        const iso = cartToIso(this.enemyCartX, this.enemyCartY);
+        this.enemy.x = iso.x;
+        this.enemy.y = iso.y;
+        this.enemy.setDepth(depthSortKey(this.enemyCartX, this.enemyCartY) + 30);
+        
         // Enemy run animation
         this.enemyAnimPhase += 0.15;
         this.enemy.y = this.enemy.y + Math.sin(this.enemyAnimPhase) * 0.5;
       } else {
         if (now - this.lastAttack > ATTACK_COOLDOWN + 300) {
           this.lastAttack = now;
-          this.createProjectile(this.enemy.x - 14, this.enemy.y - 5, this.player.x, this.player.y, ATTACK_DAMAGE, 'enemy', false);
-          this.spawnParticles(this.enemy.x - 14, this.enemy.y - 5, 3, 0xff5252, 3, 200);
+          const iso = cartToIso(this.enemyCartX, this.enemyCartY);
+          const piso = cartToIso(this.playerCartX, this.playerCartY);
+          this.createProjectile(iso.x - 14, iso.y - 5, piso.x, piso.y, ATTACK_DAMAGE, 'enemy', false);
+          this.spawnParticles(iso.x - 14, iso.y - 5, 3, 0xff5252, 3, 200);
         }
       }
     }
@@ -620,10 +706,10 @@ class GameScene extends Phaser.Scene {
     for (const t of this.towers) {
       if (t.data.hp <= 0) continue;
       if (t.data.team === 'enemy' && this.respawnTimer <= 0) {
-        const d = Phaser.Math.Distance.Between(t.data.x, t.data.y, this.player.x, this.player.y);
+        const d = Phaser.Math.Distance.Between(t.data.x, t.data.y, this.playerCartX, this.playerCartY);
         if (d < TOWER_RANGE && now % 1200 < 16) {
-          this.createProjectile(t.data.x, t.data.y - 30, this.player.x, this.player.y, TOWER_DAMAGE, 'enemy', false);
-          // Tower attack flash
+          const piso = cartToIso(this.playerCartX, this.playerCartY);
+          this.createProjectile(t.data.x, t.data.y - 30, piso.x, piso.y, TOWER_DAMAGE, 'enemy', false);
           this.spawnParticles(t.data.x, t.data.y - 30, 3, 0xd94a4a, 3, 200);
         }
       }
@@ -634,7 +720,10 @@ class GameScene extends Phaser.Scene {
       this.respawnTimer -= 16;
       if (this.respawnTimer <= 0) {
         this.playerHp = this.playerMaxHp;
-        this.player.setPosition(120, LANE_Y);
+        this.playerCartX = 120;
+        this.playerCartY = LANE_Y;
+        const iso = cartToIso(120, LANE_Y);
+        this.player.setPosition(iso.x, iso.y);
         this.player.setVisible(true);
       }
     }
@@ -642,7 +731,10 @@ class GameScene extends Phaser.Scene {
       this.enemyRespawnTimer -= 16;
       if (this.enemyRespawnTimer <= 0) {
         this.enemyHp = this.enemyMaxHp;
-        this.enemy.setPosition(ARENA_WIDTH - 120, LANE_Y);
+        this.enemyCartX = ARENA_WIDTH - 120;
+        this.enemyCartY = LANE_Y;
+        const iso = cartToIso(ARENA_WIDTH - 120, LANE_Y);
+        this.enemy.setPosition(iso.x, iso.y);
         this.enemy.setVisible(true);
       }
     }
@@ -742,15 +834,15 @@ class GameScene extends Phaser.Scene {
     // Lane line
     this.minimap.lineStyle(1, 0x8b7b5a, 0.4);
     this.minimap.lineBetween(mmX, mmY + mmH/2, mmX + mmW, mmY + mmH/2);
-    // Player
-    const sx = mmX + (this.player.x / ARENA_WIDTH) * mmW;
-    const sy = mmY + (this.player.y / ARENA_HEIGHT) * mmH;
+    // Player (use cartesian coords for minimap)
+    const sx = mmX + (this.playerCartX / ARENA_WIDTH) * mmW;
+    const sy = mmY + (this.playerCartY / ARENA_HEIGHT) * mmH;
     this.minimap.fillStyle(0x8a2be2, 1);
     this.minimap.fillCircle(sx, sy, 4);
     // Enemy
     if (this.enemyRespawnTimer <= 0) {
-      const ex = mmX + (this.enemy.x / ARENA_WIDTH) * mmW;
-      const ey = mmY + (this.enemy.y / ARENA_HEIGHT) * mmH;
+      const ex = mmX + (this.enemyCartX / ARENA_WIDTH) * mmW;
+      const ey = mmY + (this.enemyCartY / ARENA_HEIGHT) * mmH;
       this.minimap.fillStyle(0xff5252, 1);
       this.minimap.fillCircle(ex, ey, 4);
     }
