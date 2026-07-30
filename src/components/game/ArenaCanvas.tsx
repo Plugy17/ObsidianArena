@@ -4,6 +4,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Phaser from 'phaser';
+import type { Character } from '../../config/characters';
 
 // --- Arena constants ---
 const ARENA_WIDTH = 1280;
@@ -33,6 +34,10 @@ interface ParticleData { x: number; y: number; vx: number; vy: number; life: num
 
 // --- GameScene ---
 class GameScene extends Phaser.Scene {
+  public characterData: Character | null = null;
+  public gameMode: string = 'pve';
+  public onBackToLobby: () => void = () => {};
+
   private player!: Phaser.GameObjects.Container;
   private playerHp = PLAYER_HP;
   private playerMaxHp = PLAYER_HP;
@@ -896,10 +901,13 @@ const ActionButton: React.FC<{
 
 // --- ArenaCanvas Component ---
 export interface ArenaCanvasProps {
+  character: Character;
+  gameMode: 'pve' | 'pvp';
   onMatchEnd?: (result: { won: boolean; kills: number; deaths: number; duration: number }) => void;
+  onBackToLobby?: () => void;
 }
 
-export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ onMatchEnd }) => {
+export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({ character, gameMode, onMatchEnd, onBackToLobby }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const sceneRef = useRef<GameScene | null>(null);
