@@ -31,6 +31,7 @@ const MINION_DMG = 8;
 const MINION_GOLD = 25;
 const MINION_INTERVAL = 8000;
 const WAVE_COUNT = 3;
+const COLLISION_RADIUS = 20;
 
 interface Unit {
   mesh: THREE.Group;
@@ -40,6 +41,7 @@ interface Unit {
   z: number;
   team: string;
   type: 'hero' | 'tower' | 'nexus' | 'minion';
+  radius: number;
 }
 
 // ============================================
@@ -95,15 +97,22 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
   const charName = character?.name || 'Champion';
   const modeLabel = gameMode === 'pve' ? 'vs AI' : 'vs Player';
 
-  // Fullscreen on mount
+  // Fullscreen + orientation on mount
   useEffect(() => {
     const el = mountRef.current;
-    if (el && el.requestFullscreen) {
-      el.requestFullscreen().catch(() => {});
+    if (el) {
+      el.requestFullscreen?.().catch(() => {});
+      // Try to lock orientation to landscape
+      if (screen.orientation && (screen.orientation as any).lock) {
+        (screen.orientation as any).lock('landscape').catch(() => {});
+      }
     }
     return () => {
       if (document.fullscreenElement && document.exitFullscreen) {
         document.exitFullscreen().catch(() => {});
+      }
+      if (screen.orientation && (screen.orientation as any).unlock) {
+        (screen.orientation as any).unlock();
       }
     };
   }, []);
@@ -114,7 +123,7 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     canvas.width = 128;
     canvas.height = 32;
     const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
     ctx.fillRect(0, 8, 128, 16);
     ctx.fillStyle = color;
     ctx.fillRect(2, 10, Math.min(124, (parseFloat(text) / 100) * 124), 12);
@@ -126,6 +135,30 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     const sprite = new THREE.Sprite(mat);
     sprite.scale.set(size, size * 0.25, 1);
     return sprite;
+  };
+
+  // Check collision between two units
+  const checkCollision = (a: Unit, b: Unit): boolean => {
+    const dx = a.x - b.x;
+    const dz = a.z - b.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    return dist < (a.radius + b.radius);
+  };
+
+  // Resolve collision between two units
+  const resolveCollision = (a: Unit, b: Unit) => {
+    const dx = a.x - b.x;
+    const dz = a.z - b.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist === 0) return;
+    const minDist = a.radius + b.radius;
+    const overlap = minDist - dist;
+    const nx = dx / dist;
+    const nz = dz / dist;
+    a.x += nx * overlap * 0.5;
+    a.z += nz * overlap * 0.5;
+    b.x -= nx * overlap * 0.5;
+    b.z -= nz * overlap * 0.5;
   };
 
   // Build a hero mesh with better details
@@ -395,8 +428,8 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     enemyMesh.position.set(ARENA_W - 120, 0, LANE_Y);
     scene.add(enemyMesh);
 
-    const player: Unit = { mesh: playerMesh, hp: PLAYER_HP, maxHp: PLAYER_HP, x: 120, z: LANE_Y, team: 'player', type: 'hero' };
-    const enemy: Unit = { mesh: enemyMesh, hp: PLAYER_HP, maxHp: PLAYER_HP, x: ARENA_W - 120, z: LANE_Y, team: 'enemy', type: 'hero' };
+    const player: Unit = { mesh: playerMesh, hp: PLAYER_HP, maxHp: PLAYER_HP, x: 120, z: LANE_Y, team: 'player', type: 'hero', radius: COLLISION_RADIUS };
+    const enemy: Unit = { mesh: enemyMesh, hp: PLAYER_HP, maxHp: PLAYER_HP, x: ARENA_W - 120, z: LANE_Y, team: 'enemy', type: 'hero', radius: COLLISION_RADIUS };
 
     // Towers
     const towers: Unit[] = [];
@@ -413,7 +446,7 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       scene.add(mesh);
-      towers.push({ mesh, hp: TOWER_HP, maxHp: TOWER_HP, ...tp, team: tp.team, type: 'tower' });
+      towers.push({ mesh, hp: TOWER_HP, maxHp: TOWER_HP, ...tp, team: tp.team, type: 'tower', radius: COLLISION_RADIUS });
     }
 
     // Nexuses
@@ -425,8 +458,8 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
     nexusRMesh.position.set(ARENA_W - 60, 0, LANE_Y);
     nexusRMesh.castShadow = true;
     scene.add(nexusRMesh);
-    const nexusL: Unit = { mesh: nexusLMesh, hp: NEXUS_HP, maxHp: NEXUS_HP, x: 60, z: LANE_Y, team: 'player', type: 'nexus' };
-    const nexusR: Unit = { mesh: nexusRMesh, hp: NEXUS_HP, maxHp: NEXUS_HP, x: ARENA_W - 60, z: LANE_Y, team: 'enemy', type: 'nexus' };
+    const nexusL: Unit = { mesh: nexusLMesh, hp: NEXUS_HP, maxHp: NEXUS_HP, x: 60, z: LANE_Y, team: 'player', type: 'nexus', radius: COLLISION_RADIUS };
+    const nexusR: Unit = { mesh: nexusRMesh, hp: NEXUS_HP, maxHp: NEXUS_HP, x: ARENA_W - 60, z: LANE_Y, team: 'enemy', type: 'nexus', radius: COLLISION_RADIUS };
 
     // State
     const state = {
@@ -471,7 +504,7 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
         const z = LANE_Y + (Math.random() - 0.5) * 20;
         mesh.position.set(x, 0, z);
         scene.add(mesh);
-        state.minions.push({ mesh, hp: MINION_HP, maxHp: MINION_HP, x, z, team, type: 'minion' });
+        state.minions.push({ mesh, hp: MINION_HP, maxHp: MINION_HP, x, z, team, type: 'minion', radius: COLLISION_RADIUS });
       }
     };
 
@@ -482,10 +515,10 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
 
       // Player movement
       if (state.respawn <= 0) {
-        state.playerX += state.moveDir.x * SPEED * dt;
-        state.playerZ += state.moveDir.z * SPEED * dt;
-        state.playerX = Math.max(20, Math.min(ARENA_W - 20, state.playerX));
-        state.playerZ = Math.max(-300, Math.min(300, state.playerZ));
+        const newX = state.playerX + state.moveDir.x * SPEED * dt;
+        const newZ = state.playerZ + state.moveDir.z * SPEED * dt;
+        state.playerX = Math.max(20, Math.min(ARENA_W - 20, newX));
+        state.playerZ = Math.max(-300, Math.min(300, newZ));
         state.player.mesh.position.x = state.playerX;
         state.player.mesh.position.z = state.playerZ;
         state.player.x = state.playerX;
@@ -498,14 +531,54 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
         }
       }
 
+      // Collision detection and resolution
+      const allUnits: Unit[] = [state.player, state.enemy, ...state.towers, ...state.minions, state.nexusL, state.nexusR];
+      for (let i = 0; i < allUnits.length; i++) {
+        for (let j = i + 1; j < allUnits.length; j++) {
+          const a = allUnits[i];
+          const b = allUnits[j];
+          if (a.hp <= 0 || b.hp <= 0) continue;
+          const dx = a.x - b.x;
+          const dz = a.z - b.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+          const minDist = a.radius + b.radius;
+          if (dist < minDist && dist > 0) {
+            const overlap = minDist - dist;
+            const nx = dx / dist;
+            const nz = dz / dist;
+            // Push apart movable units
+            if (a.type === 'hero' || a.type === 'minion') {
+              a.x += nx * overlap * 0.5;
+              a.z += nz * overlap * 0.5;
+            }
+            if (b.type === 'hero' || b.type === 'minion') {
+              b.x -= nx * overlap * 0.5;
+              b.z -= nz * overlap * 0.5;
+            }
+          }
+        }
+      }
+      // Sync state positions with unit positions after collision
+      state.playerX = state.player.x;
+      state.playerZ = state.player.z;
+      state.enemyX = state.enemy.x;
+      state.enemyZ = state.enemy.z;
+      // Update mesh positions
+      state.player.mesh.position.x = state.playerX;
+      state.player.mesh.position.z = state.playerZ;
+      state.enemy.mesh.position.x = state.enemyX;
+      state.enemy.mesh.position.z = state.enemyZ;
+
       // Enemy AI
       if (state.enemyRespawn <= 0) {
         const dx = state.playerX - state.enemyX;
         const dz = state.playerZ - state.enemyZ;
         const dist = Math.sqrt(dx * dx + dz * dz);
         if (dist > ATK_RANGE) {
-          state.enemyX += (dx / dist) * SPEED * 0.7 * dt;
-          state.enemyZ += (dz / dist) * SPEED * 0.7 * dt;
+          const newX = state.enemyX + (dx / dist) * SPEED * 0.7 * dt;
+          const newZ = state.enemyZ + (dz / dist) * SPEED * 0.7 * dt;
+          state.enemyX = newX;
+          state.enemyZ = newZ;
           state.enemy.mesh.position.x = state.enemyX;
           state.enemy.mesh.position.z = state.enemyZ;
           state.enemy.x = state.enemyX;
@@ -523,19 +596,36 @@ export const Arena3D: React.FC<Arena3DProps> = ({ character, gameMode, onMatchEn
         const dx = targetX - m.x;
         const dist = Math.abs(dx);
         if (dist > 10) {
-          m.x += (dx / dist) * MINION_SPD * dt;
+          const newX = m.x + (dx / dist) * MINION_SPD * dt;
+          m.x = newX;
           m.mesh.position.x = m.x;
         }
         // Attack towers
         for (const t of towers) {
           if (t.team !== m.team && t.hp > 0) {
             const d = Math.sqrt((m.x - t.x) ** 2 + (m.z - t.z) ** 2);
-            if (d < 50) t.hp -= MINION_DMG * dt;
+            if (d < 50) {
+              t.hp -= MINION_DMG * dt;
+              if (t.hp < 0) t.hp = 0;
+            }
+          }
+        }
+        // Attack nexus
+        if (m.team === 'player') {
+          const d = Math.sqrt((m.x - nexusR.x) ** 2 + (m.z - nexusR.z) ** 2);
+          if (d < 50) {
+            state.nexusRHp -= MINION_DMG * dt;
+            if (state.nexusRHp < 0) state.nexusRHp = 0;
           }
         }
         if (m.team === 'enemy') {
-          const d = Math.sqrt((m.x - state.playerX) ** 2 + (m.z - state.playerZ) ** 2);
-          if (d < 50) state.playerHp -= MINION_DMG * dt;
+          const d = Math.sqrt((m.x - nexusL.x) ** 2 + (m.z - nexusL.z) ** 2);
+          if (d < 50) {
+            state.nexusLHp -= MINION_DMG * dt;
+            if (state.nexusLHp < 0) state.nexusLHp = 0;
+          }
+          const pd = Math.sqrt((m.x - state.playerX) ** 2 + (m.z - state.playerZ) ** 2);
+          if (pd < 50) state.playerHp -= MINION_DMG * dt;
         }
       }
 
